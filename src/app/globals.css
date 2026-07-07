@@ -577,3 +577,117 @@ body {
     justify-content: center;
   }
 }
+
+/* ========== AUTHENTICATION UI ========== */
+.signInButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 100px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.signInButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(0, 186, 188, 0.2);
+  transform: translateY(-2px);
+}
+
+.userMenuContainer {
+  position: relative;
+}
+
+.userAvatarBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.userAvatarBtn:hover {
+  transform: scale(1.05);
+}
+
+.userAvatar {
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  object-fit: cover;
+}
+
+.userDropdown {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: 0;
+  width: 200px;
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeIn 0.2s ease-out;
+  z-index: 200;
+}
+
+.userDropdown::before {
+  content: '';
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  right: 0;
+  height: 1rem;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.userLogin {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dropdownDivider {
+  border: none;
+  height: 1px;
+  background: var(--glass-border);
+  margin: 0.25rem 0;
+}
+
+.signOutBtn {
+  display: inline-block;
+  color: #ff6b6b;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  padding: 0.25rem 0;
+}
+
+.signOutBtn:hover {
+  opacity: 0.8;
+}

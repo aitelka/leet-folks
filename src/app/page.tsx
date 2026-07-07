@@ -1,8 +1,12 @@
 import Countdown from "@/components/Countdown";
 import Particles from "@/components/Particles";
 import Link from "next/link";
+import AuthButton from "@/components/AuthButton";
+import { getSession } from "@/lib/session";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSession();
+  
   return (
     <section className="hero" id="hero">
       {/* Background effects */}
@@ -19,7 +23,7 @@ export default function Home() {
             <span>leet</span>folks
           </div>
         </Link>
-
+        <AuthButton user={session ? { id: session.userId, login: session.login, avatarUrl: session.avatarUrl } : null} />
       </nav>
 
       {/* Hero Content */}
