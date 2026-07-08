@@ -1473,13 +1473,13 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 0;
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  border-radius: 12px;
   padding: 1.5rem;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: transform 0.3s ease, opacity 0.3s ease;
   position: relative;
+  contain: layout;
 }
 
 .podiumPlace:hover {
@@ -1606,24 +1606,11 @@ h1, h2, h3, h4, h5, h6,
   transition: opacity 0.3s ease;
 }
 
-/* Hide content on the active card while modal is open */
-.cardActive .podiumName,
-.cardActive .podiumLogin,
-.cardActive .podiumLevel,
-.cardActive .leaderboardItemInfo,
-.cardActive .leaderboardItemLevel,
-.cardActive .leaderboardRank {
-  opacity: 0;
-}
-
-.cardActive.podiumPlace {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 20px rgba(0, 186, 188, 0.2), inset 0 0 30px rgba(0, 186, 188, 0.05);
-}
-
+/* Hide the entire active card while modal is open to prevent duplicates */
+.cardActive.podiumPlace,
 .cardActive.leaderboardItem {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 15px rgba(0, 186, 188, 0.15);
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 .leaderboardList {
@@ -1640,11 +1627,11 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 0;
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  border-radius: 12px;
   padding: 0.75rem 2rem;
   transition: all 0.3s ease;
   animation: fadeInUp 0.5s ease-out backwards;
+  contain: layout;
 }
 
 .leaderboardItem:hover {
@@ -1937,8 +1924,8 @@ h1, h2, h3, h4, h5, h6,
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); */
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1991,14 +1978,7 @@ h1, h2, h3, h4, h5, h6,
   max-width: 400px;
   background: var(--bg-secondary);
   padding: 2rem;
-  clip-path: polygon(
-    20px 0, 
-    100% 0, 
-    100% calc(100% - 20px), 
-    calc(100% - 20px) 100%, 
-    0 100%, 
-    0 20px
-  );
+  border-radius: 4px;
   border: 1px solid var(--glass-border);
   box-shadow: 
     0 0 30px rgba(0, 186, 188, 0.15), 
@@ -2009,10 +1989,25 @@ h1, h2, h3, h4, h5, h6,
   filter: blur(8px);
   /* Default exit: morphZoomOut */
   animation: morphZoomOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  contain: layout;
 }
 
 .userModalContent.visible {
   animation: morphZoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Disable CSS keyframe morph if using View Transitions */
+.userModalOverlay.vt-modal {
+  opacity: 1;
+  visibility: visible;
+  background: transparent !important;
+}
+
+.userModalContent.vt-modal {
+  animation: none !important;
+  opacity: 1;
+  transform: none;
+  filter: none;
 }
 
 /* Simulated Glowing Border */
@@ -2021,14 +2016,7 @@ h1, h2, h3, h4, h5, h6,
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   border: 2px solid var(--accent);
-  clip-path: polygon(
-    20px 0, 
-    100% 0, 
-    100% calc(100% - 20px), 
-    calc(100% - 20px) 100%, 
-    0 100%, 
-    0 20px
-  );
+  border-radius: 4px;
   z-index: -1;
   box-shadow: 0 0 15px var(--accent);
   opacity: 0.5;
@@ -2165,43 +2153,98 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: 0 0 15px rgba(0, 186, 188, 0.4);
 }
 
-/* Custom View Transitions: PowerPoint Morph (No cross-fade ghosting for card background) */
-::view-transition-old(card-*) {
-  animation: none !important;
-  opacity: 0 !important;
-}
+/* ========== VIEW TRANSITIONS: True Card→Dialog Morph ========== */
 
-::view-transition-new(card-*) {
+/* Disable the default page crossfade to prevent a black flash.
+   We only want our explicit components (card, modal, etc.) to animate. */
+::view-transition-old(root) {
+  display: none !important;
+}
+::view-transition-new(root) {
   animation: none !important;
   opacity: 1 !important;
 }
 
-::view-transition-image-pair(card-*) {
-  mix-blend-mode: normal !important;
+/* Morph duration and easing for all flying components.
+   By NOT overriding ::view-transition-old and new for these, the browser uses
+   its default `plus-lighter` crossfade, ensuring opacities sum to 1.0 and 
+   preventing elements from becoming transparent and revealing black backgrounds! */
+::view-transition-group(card-*) {
+  animation-duration: 0.45s !important;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  z-index: 2;
 }
 
-/* Smooth morph fade animation for avatar and name */
-::view-transition-old(avatar-*),
-::view-transition-old(name-*) {
-  animation: fade-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+::view-transition-group(avatar-*),
+::view-transition-group(name-*),
+::view-transition-group(login-*),
+::view-transition-group(level-*) {
+  animation-duration: 0.45s !important;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  z-index: 3;
 }
 
-::view-transition-new(avatar-*),
-::view-transition-new(name-*) {
-  animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+/* Modal Overlay timings */
+::view-transition-group(modal-overlay) {
+  animation-duration: 0.45s !important;
+  z-index: 1;
 }
 
-::view-transition-image-pair(avatar-*),
-::view-transition-image-pair(name-*) {
-  mix-blend-mode: normal !important;
+/* When opening, wait until the morph is almost finished before fading in the dark bg */
+::view-transition-new(modal-overlay) {
+  animation: vt-overlay-in 0.45s ease both !important;
 }
 
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+/* When closing, fade out the dark bg immediately so it's gone while the card flies back */
+::view-transition-old(modal-overlay) {
+  animation: vt-overlay-out 0.45s ease both !important;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes vt-overlay-in {
+  0%, 60% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes vt-overlay-out {
+  0% { opacity: 1; }
+  40%, 100% { opacity: 0; }
+}
+
+/* ========== JUMP TO TOP BUTTON ========== */
+.jumpToTopBtn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 186, 188, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+}
+
+.jumpToTopBtn.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.jumpToTopBtn:hover {
+  background: var(--accent);
+  color: var(--bg-primary);
+  box-shadow: 0 0 20px rgba(0, 186, 188, 0.5);
+  transform: translateY(-5px);
 }

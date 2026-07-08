@@ -16,44 +16,54 @@ interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: ModalUser | null;
+  useViewTransition?: boolean;
 }
 
-export default function UserProfileModal({ isOpen, onClose, user }: UserProfileModalProps) {
+export default function UserProfileModal({ isOpen, onClose, user, useViewTransition }: UserProfileModalProps) {
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(isOpen);
 
-  if (isOpen && !isRendered) {
-    setIsRendered(true);
-  }
-
   useEffect(() => {
     if (isOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.paddingRight = '0px';
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (useViewTransition) return;
+
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsRendered(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           setIsVisible(true);
         });
       });
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      document.body.style.overflow = 'hidden';
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(false);
-      document.body.style.paddingRight = '0px';
-      document.body.style.overflow = 'unset';
       const timeout = setTimeout(() => setIsRendered(false), 400);
       return () => clearTimeout(timeout);
     }
-  }, [isOpen]);
+  }, [isOpen, useViewTransition]);
 
-  if (!isRendered || !user) return null;
+  const activeRender = useViewTransition ? isOpen : isRendered;
+  if (!activeRender || !user) return null;
 
   const defaultAvatar = `https://ui-avatars.com/api/?name=${user.login}&background=0a0a0a&color=00babc&size=250&bold=true`;
 
+  const overlayClass = `userModalOverlay ${useViewTransition ? 'vt-modal' : (isVisible ? 'visible' : '')}`;
+  const contentClass = `userModalContent ${useViewTransition ? 'vt-modal' : (isVisible ? 'visible' : '')}`;
+
   return (
-    <div className={`userModalOverlay ${isVisible ? 'visible' : ''}`} onClick={onClose}>
+    <div className={overlayClass} onClick={onClose} style={{ viewTransitionName: 'modal-overlay' }}>
       <div 
-        className={`userModalContent ${isVisible ? 'visible' : ''}`} 
+        className={contentClass} 
         onClick={(e) => e.stopPropagation()}
         style={{ viewTransitionName: `card-${user.id}` }}
       >
@@ -77,6 +87,7 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
               target="_blank" 
               rel="noopener noreferrer"
               className="userModalLogin"
+              style={{ viewTransitionName: `login-${user.id}` }}
             >
               @{user.login}
             </a>
@@ -86,7 +97,7 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
         <div className="userModalStats">
           <div className="userModalStatBox">
             <span className="statLabel">Level</span>
-            <span className="statValue">{user.level.toFixed(2)}</span>
+            <span className="statValue" style={{ viewTransitionName: `level-${user.id}` }}>{user.level.toFixed(2)}</span>
           </div>
           
           {user.validatedPool !== undefined && (

@@ -28,6 +28,7 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   
   const [selectedUser, setSelectedUser] = useState<ModalUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const activeCardRef = useRef<HTMLDivElement | null>(null);
 
   const filteredUsers = promoYear === "all" ? users : users.filter(u => u.poolYear === promoYear);
@@ -52,10 +53,22 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promoYear, users]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleUserClick = useCallback((user: LeaderboardUser, cardElement: HTMLDivElement | null) => {
     activeCardRef.current = cardElement;
     
-    if (!document.startViewTransition) {
+    if (typeof document === 'undefined' || !document.startViewTransition) {
       setActiveCardId(user.id);
       setSelectedUser(user);
       setIsModalOpen(true);
@@ -63,12 +76,12 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     }
 
     flushSync(() => {
-      setActiveCardId(user.id);
       setTransitioningCardId(user.id);
     });
 
     document.startViewTransition(() => {
       flushSync(() => {
+        setActiveCardId(user.id);
         setSelectedUser(user);
         setIsModalOpen(true);
         setTransitioningCardId(null);
@@ -77,7 +90,7 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   }, []);
 
   const handleModalClose = useCallback(() => {
-    if (!document.startViewTransition) {
+    if (typeof document === 'undefined' || !document.startViewTransition) {
       setIsModalOpen(false);
       setTimeout(() => {
         setActiveCardId(null);
@@ -89,13 +102,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     const transition = document.startViewTransition(() => {
       flushSync(() => {
         setIsModalOpen(false);
+        setActiveCardId(null);
         setTransitioningCardId(selectedUser?.id || null);
       });
     });
 
     transition.finished.finally(() => {
       flushSync(() => {
-        setActiveCardId(null);
         setTransitioningCardId(null);
         activeCardRef.current = null;
       });
@@ -293,8 +306,12 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               >
                 {top3[1].displayname}
               </span>
-              <span className="podiumLogin">@{top3[1].login}</span>
-              <span className="podiumLevel">Lvl {top3[1].level.toFixed(2)}</span>
+              <span className="podiumLogin" style={{
+                viewTransitionName: transitioningCardId === top3[1].id ? `login-${top3[1].id}` : "none"
+              }}>@{top3[1].login}</span>
+              <span className="podiumLevel" style={{
+                viewTransitionName: transitioningCardId === top3[1].id ? `level-${top3[1].id}` : "none"
+              }}>Lvl {top3[1].level.toFixed(2)}</span>
             </div>
           )}
           
@@ -330,8 +347,12 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               >
                 {top3[0].displayname}
               </span>
-              <span className="podiumLogin">@{top3[0].login}</span>
-              <span className="podiumLevel">Lvl {top3[0].level.toFixed(2)}</span>
+              <span className="podiumLogin" style={{
+                viewTransitionName: transitioningCardId === top3[0].id ? `login-${top3[0].id}` : "none"
+              }}>@{top3[0].login}</span>
+              <span className="podiumLevel" style={{
+                viewTransitionName: transitioningCardId === top3[0].id ? `level-${top3[0].id}` : "none"
+              }}>Lvl {top3[0].level.toFixed(2)}</span>
             </div>
           )}
 
@@ -367,8 +388,12 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               >
                 {top3[2].displayname}
               </span>
-              <span className="podiumLogin">@{top3[2].login}</span>
-              <span className="podiumLevel">Lvl {top3[2].level.toFixed(2)}</span>
+              <span className="podiumLogin" style={{
+                viewTransitionName: transitioningCardId === top3[2].id ? `login-${top3[2].id}` : "none"
+              }}>@{top3[2].login}</span>
+              <span className="podiumLevel" style={{
+                viewTransitionName: transitioningCardId === top3[2].id ? `level-${top3[2].id}` : "none"
+              }}>Lvl {top3[2].level.toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -382,22 +407,33 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
             key={user.id} 
             style={{
               animationDelay: `${Math.min(index * 0.05, 1)}s`,
-              cursor: "pointer",
-              viewTransitionName: transitioningCardId === user.id ? `card-${user.id}` : "none"
+              cursor: "pointer"
             } as React.CSSProperties}
             onClick={(e) => handleUserClick(user, e.currentTarget)}
           >
             <div className="leaderboardRank">{index + 4}</div>
-            <Image
-                src={user.imageUrl || `https://ui-avatars.com/api/?name=${user.login}&background=0a0a0a&color=00babc&size=100&bold=true`}
-                alt={user.displayname}
-                width={72}
-                height={72}
-                className="leaderboardAvatar"
-                style={{
-                  viewTransitionName: transitioningCardId === user.id ? `avatar-${user.id}` : "none"
-                }}
-            />
+            <div 
+              style={{
+                viewTransitionName: transitioningCardId === user.id ? `card-${user.id}` : "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                marginRight: "2rem"
+              }}
+            >
+              <Image
+                  src={user.imageUrl || `https://ui-avatars.com/api/?name=${user.login}&background=0a0a0a&color=00babc&size=100&bold=true`}
+                  alt={user.displayname}
+                  width={72}
+                  height={72}
+                  className="leaderboardAvatar"
+                  style={{
+                    marginRight: 0, /* We moved the margin to the wrapper */
+                    viewTransitionName: transitioningCardId === user.id ? `avatar-${user.id}` : "none"
+                  }}
+              />
+            </div>
             <div className="leaderboardItemInfo">
               <span 
                 className="leaderboardItemName"
@@ -407,9 +443,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               >
                 {user.displayname}
               </span>
-              <span className="leaderboardItemLogin">@{user.login}</span>
+              <span className="leaderboardItemLogin" style={{
+                viewTransitionName: transitioningCardId === user.id ? `login-${user.id}` : "none"
+              }}>@{user.login}</span>
             </div>
-            <div className="leaderboardItemLevel">
+            <div className="leaderboardItemLevel" style={{
+              viewTransitionName: transitioningCardId === user.id ? `level-${user.id}` : "none"
+            }}>
               Lvl {user.level.toFixed(2)}
             </div>
           </div>
@@ -437,7 +477,17 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
         isOpen={isModalOpen} 
         onClose={handleModalClose} 
         user={selectedUser} 
+        useViewTransition={typeof document !== 'undefined' && !!document.startViewTransition}
       />
+
+      {/* Jump to Top Button */}
+      <div 
+        className={`jumpToTopBtn ${showScrollTop ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        title="Jump to Top"
+      >
+        ↑
+      </div>
     </div>
   );
 }
