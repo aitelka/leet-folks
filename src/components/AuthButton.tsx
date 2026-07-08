@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface User {
   id: number;
@@ -12,6 +12,22 @@ interface User {
 
 export default function AuthButton({ user }: { user: User | null }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   if (!user) {
     return (
@@ -22,7 +38,7 @@ export default function AuthButton({ user }: { user: User | null }) {
   }
 
   return (
-    <div className="userMenuContainer" onMouseLeave={() => setDropdownOpen(false)}>
+    <div className="userMenuContainer" ref={menuRef}>
       <button 
         className="userAvatarBtn" 
         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -43,8 +59,13 @@ export default function AuthButton({ user }: { user: User | null }) {
             <span className="userLogin">{user.login}</span>
             <span className="userRole">42 Student</span>
           </div>
+          <div className="dropdownLinks">
+            <Link href="/pool" className="dropdownLink" onClick={() => setDropdownOpen(false)}>
+              My Pool
+            </Link>
+          </div>
           <hr className="dropdownDivider" />
-          <a href="/api/auth/logout" className="signOutBtn">
+          <a href="/api/auth/logout" className="signOutBtn" onClick={() => setDropdownOpen(false)}>
             Sign out
           </a>
         </div>
