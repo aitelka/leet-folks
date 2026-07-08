@@ -23,7 +23,7 @@ export default async function Home() {
             <span>leet</span>folks
           </div>
         </Link>
-        <AuthButton user={session ? { id: session.userId, login: session.login, avatarUrl: session.avatarUrl } : null} />
+        <AuthButton user={session ? { id: session.userId, login: session.login, avatarUrl: session.avatarUrl, isStudent: session.isStudent } : null} />
       </nav>
 
       {/* Hero Content */}
