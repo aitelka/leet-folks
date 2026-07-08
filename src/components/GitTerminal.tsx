@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function GitTerminal() {
   const [text, setText] = useState("");
   const [showCursor, setShowCursor] = useState(true);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [text]);
 
   useEffect(() => {
     // Blinking cursor
@@ -89,7 +96,7 @@ export default function GitTerminal() {
         </div>
         <div className="gitTerminalTitle">bash — aaitelka@macbook</div>
       </div>
-      <div className="gitTerminalBody">
+      <div className="gitTerminalBody" ref={bodyRef}>
         <pre>
           <span dangerouslySetInnerHTML={{ __html: text }} />
           <span className={`gitCursor ${showCursor ? 'visible' : 'hidden'}`}>_</span>

@@ -307,8 +307,15 @@ h1, h2, h3, h4, h5, h6,
 .gitTerminalBody {
   padding: 16px;
   height: 380px;
-  overflow-y: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.gitTerminalBody::-webkit-scrollbar {
+  display: none;
+}
+
 
 .gitTerminalBody pre {
   margin: 0;
