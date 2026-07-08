@@ -67,10 +67,11 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
               width={120}
               height={120}
               className="userModalAvatar"
+              style={{ viewTransitionName: `avatar-${user.id}` }}
             />
           </div>
           <div className="userModalIdentity">
-            <h2 className="userModalName">{user.displayname}</h2>
+            <h2 className="userModalName" style={{ viewTransitionName: `name-${user.id}` }}>{user.displayname}</h2>
             <a 
               href={`https://profile.intra.42.fr/users/${user.login}`} 
               target="_blank" 

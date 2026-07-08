@@ -280,9 +280,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={120}
                   height={120}
                   className="podiumAvatar"
+                  style={{
+                    viewTransitionName: transitioningCardId === top3[1].id ? `avatar-${top3[1].id}` : "none"
+                  }}
                 />
               </div>
-              <span className="podiumName">{top3[1].displayname}</span>
+              <span 
+                className="podiumName"
+                style={{
+                  viewTransitionName: transitioningCardId === top3[1].id ? `name-${top3[1].id}` : "none"
+                }}
+              >
+                {top3[1].displayname}
+              </span>
               <span className="podiumLogin">@{top3[1].login}</span>
               <span className="podiumLevel">Lvl {top3[1].level.toFixed(2)}</span>
             </div>
@@ -307,9 +317,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={160}
                   height={160}
                   className="podiumAvatar"
+                  style={{
+                    viewTransitionName: transitioningCardId === top3[0].id ? `avatar-${top3[0].id}` : "none"
+                  }}
                 />
               </div>
-              <span className="podiumName">{top3[0].displayname}</span>
+              <span 
+                className="podiumName"
+                style={{
+                  viewTransitionName: transitioningCardId === top3[0].id ? `name-${top3[0].id}` : "none"
+                }}
+              >
+                {top3[0].displayname}
+              </span>
               <span className="podiumLogin">@{top3[0].login}</span>
               <span className="podiumLevel">Lvl {top3[0].level.toFixed(2)}</span>
             </div>
@@ -334,9 +354,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={110}
                   height={110}
                   className="podiumAvatar"
+                  style={{
+                    viewTransitionName: transitioningCardId === top3[2].id ? `avatar-${top3[2].id}` : "none"
+                  }}
                 />
               </div>
-              <span className="podiumName">{top3[2].displayname}</span>
+              <span 
+                className="podiumName"
+                style={{
+                  viewTransitionName: transitioningCardId === top3[2].id ? `name-${top3[2].id}` : "none"
+                }}
+              >
+                {top3[2].displayname}
+              </span>
               <span className="podiumLogin">@{top3[2].login}</span>
               <span className="podiumLevel">Lvl {top3[2].level.toFixed(2)}</span>
             </div>
@@ -364,9 +394,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                 width={72}
                 height={72}
                 className="leaderboardAvatar"
+                style={{
+                  viewTransitionName: transitioningCardId === user.id ? `avatar-${user.id}` : "none"
+                }}
             />
             <div className="leaderboardItemInfo">
-              <span className="leaderboardItemName">{user.displayname}</span>
+              <span 
+                className="leaderboardItemName"
+                style={{
+                  viewTransitionName: transitioningCardId === user.id ? `name-${user.id}` : "none"
+                }}
+              >
+                {user.displayname}
+              </span>
               <span className="leaderboardItemLogin">@{user.login}</span>
             </div>
             <div className="leaderboardItemLevel">
