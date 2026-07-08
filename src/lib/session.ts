@@ -17,6 +17,7 @@ export interface SessionPayload {
   poolYear: string;
   campusId: number;
   expiresAt: Date;
+  isStudent: boolean;
 }
 
 export async function encrypt(payload: SessionPayload) {
@@ -38,9 +39,10 @@ export async function decrypt(session: string | undefined = "") {
   }
 }
 
-export async function createSession(user: { id: number; login: string; image?: { link?: string }; pool_month?: string; pool_year?: string; campus_users?: { campus_id: number; is_primary: boolean }[] }, accessToken: string) {
+export async function createSession(user: { id: number; login: string; image?: { link?: string }; pool_month?: string; pool_year?: string; campus_users?: { campus_id: number; is_primary: boolean }[]; cursus_users?: { cursus_id: number }[] }, accessToken: string) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   const primaryCampus = user.campus_users?.find(cu => cu.is_primary);
+  const isStudent = user.cursus_users?.some(cu => cu.cursus_id === 21) ?? false;
   const session = await encrypt({
     userId: user.id,
     login: user.login,
@@ -50,6 +52,7 @@ export async function createSession(user: { id: number; login: string; image?: {
     poolYear: user.pool_year || "",
     campusId: primaryCampus?.campus_id || 0,
     expiresAt,
+    isStudent,
   });
   
   const cookieStore = await cookies();

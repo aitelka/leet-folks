@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
-import PoolGrid from "@/components/PoolGrid";
+import LeaderboardClient from "@/components/LeaderboardClient";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 
@@ -14,8 +14,8 @@ export default async function PoolPage() {
   return (
     <section className="poolPage" id="poolPage">
       {/* Background */}
-      <div className="poolBgGradient" />
-      <div className="gridOverlay" />
+      <div className="poolBgGradient cyberpunkBgGradient" />
+      <div className="gridOverlay cyberpunkGridOverlay" />
 
       {/* Navigation */}
       <nav className="nav" id="nav">
@@ -30,6 +30,7 @@ export default async function PoolPage() {
             id: session.userId,
             login: session.login,
             avatarUrl: session.avatarUrl,
+            isStudent: session.isStudent,
           }}
         />
       </nav>
@@ -40,15 +41,15 @@ export default async function PoolPage() {
           <span className="poolBadge">
             {session.poolMonth} {session.poolYear}
           </span>
-          <h1 className="poolTitle">
+          <h1 className="poolTitle cyberpunk-text">
             My <span className="accent">Pool</span>
           </h1>
           <p className="poolSubtitle">
-            All the peers who started their journey with you
+            Top performers from your pool
           </p>
         </div>
 
-        <PoolGrid />
+        <LeaderboardClient dataSource="pool" />
       </div>
     </section>
   );

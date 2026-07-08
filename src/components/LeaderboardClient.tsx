@@ -14,7 +14,7 @@ interface LeaderboardUser {
   poolYear: string;
 }
 
-export default function LeaderboardClient() {
+export default function LeaderboardClient({ dataSource = "leaderboard" }: { dataSource?: "leaderboard" | "pool" }) {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -88,7 +88,8 @@ export default function LeaderboardClient() {
 
   const fetchLeaderboard = async (pageNum: number) => {
     try {
-      const res = await fetch(`/api/leaderboard?page=${pageNum}&limit=50`);
+      const endpoint = dataSource === "pool" ? `/api/pool` : `/api/leaderboard?page=${pageNum}&limit=50`;
+      const res = await fetch(endpoint);
       if (!res.ok) {
         const err = await res.json();
         if (res.status === 401) {
@@ -116,6 +117,7 @@ export default function LeaderboardClient() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLeaderboard(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMore = () => {
@@ -132,9 +134,11 @@ export default function LeaderboardClient() {
     return (
       <div className="leaderboardContainer" id="leaderboardContainer">
         {/* Shimmer Filters */}
-        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
-          <div className="shimmer poolFilterSelect" style={{ width: "200px", height: "40px", border: "none" }}></div>
-        </div>
+        {dataSource === "leaderboard" && (
+          <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
+            <div className="shimmer poolFilterSelect" style={{ width: "200px", height: "40px", border: "none" }}></div>
+          </div>
+        )}
 
         {/* Shimmer Podium */}
         <div className="podiumContainer">
@@ -216,25 +220,27 @@ export default function LeaderboardClient() {
   return (
     <div className="leaderboardContainer" id="leaderboardContainer">
       {/* Filters */}
-      <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
-        <select 
-          className="poolFilterSelect" 
-          value={promoYear} 
-          onChange={(e) => {
-            setPromoYear(e.target.value);
-            setPage(1);
-          }}
-        >
-          <option value="all">All Promo Years</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-          <option value="2022">2022</option>
-          <option value="2021">2021</option>
-          <option value="2020">2020</option>
-          <option value="2019">2019</option>
-          <option value="2018">2018</option>
-        </select>
-      </div>
+      {dataSource === "leaderboard" && (
+        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
+          <select 
+            className="poolFilterSelect" 
+            value={promoYear} 
+            onChange={(e) => {
+              setPromoYear(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="all">All Promo Years</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+            <option value="2018">2018</option>
+          </select>
+        </div>
+      )}
 
       {/* Top 3 Podium */}
       {top3.length > 0 && (

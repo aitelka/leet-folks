@@ -132,15 +132,21 @@ export async function GET() {
       login: user.login,
       displayname: user.displayname,
       imageUrl: user.image?.link || null,
+      poolYear: session.poolYear,
+      poolMonth: session.poolMonth,
       level: user.level || 0,
+      campusId: session.campusId,
       validatedPool: !!user.validatedPool,
     }));
+
+    poolUsers.sort((a, b) => b.level - a.level);
 
     return NextResponse.json({
       poolMonth: session.poolMonth,
       poolYear: session.poolYear,
       total: poolUsers.length,
       users: poolUsers,
+      hasMore: false,
     });
   } catch (err) {
     console.error("Pool users fetch error:", err);

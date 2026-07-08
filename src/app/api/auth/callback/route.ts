@@ -70,7 +70,10 @@ export async function GET(request: NextRequest) {
     // Create session
     await createSession(userData, accessToken);
 
-    return NextResponse.redirect(new URL("/leaderboard", request.url));
+    const isStudent = userData.cursus_users?.some((c: { cursus_id: number }) => c.cursus_id === 21) ?? false;
+    const redirectPath = isStudent ? "/leaderboard" : "/pool";
+
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   } catch (err) {
     console.error("OAuth callback error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

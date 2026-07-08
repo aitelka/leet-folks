@@ -12,6 +12,10 @@ export default async function LeaderboardPage() {
     redirect("/");
   }
 
+  if (!session.isStudent) {
+    redirect("/pool");
+  }
+
   return (
     <section className="poolPage" id="leaderboardPage">
       {/* Background */}
@@ -26,7 +30,7 @@ export default async function LeaderboardPage() {
             <span>leet</span>folks
           </div>
         </Link>
-        <AuthButton user={{ id: session.userId, login: session.login, avatarUrl: session.avatarUrl }} />
+        <AuthButton user={{ id: session.userId, login: session.login, avatarUrl: session.avatarUrl, isStudent: session.isStudent }} />
       </nav>
 
       <div className="poolContainer">

@@ -8,6 +8,7 @@ interface User {
   id: number;
   login: string;
   avatarUrl: string;
+  isStudent: boolean;
 }
 
 export default function AuthButton({ user }: { user: User | null }) {
@@ -57,12 +58,19 @@ export default function AuthButton({ user }: { user: User | null }) {
         <div className="userDropdown">
           <div className="userInfo">
             <span className="userLogin">{user.login}</span>
-            <span className="userRole">42 Student</span>
+            <span className="userRole">{user.isStudent ? "42 Student" : "42 Pooler"}</span>
           </div>
           <div className="dropdownLinks">
-            <Link href="/pool" className="dropdownLink" onClick={() => setDropdownOpen(false)}>
-              My Pool
-            </Link>
+            {user.isStudent && (
+              <Link href="/leaderboard" className="dropdownLink" onClick={() => setDropdownOpen(false)}>
+                Leaderboard
+              </Link>
+            )}
+            {user.isStudent && (
+              <Link href="/pool" className="dropdownLink" onClick={() => setDropdownOpen(false)}>
+                My Pool
+              </Link>
+            )}
           </div>
           <hr className="dropdownDivider" />
           <a href="/api/auth/logout" className="signOutBtn" onClick={() => setDropdownOpen(false)}>
