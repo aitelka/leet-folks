@@ -19,19 +19,19 @@ export default function GitTerminal() {
     let timeoutId: NodeJS.Timeout;
     
     const sequence = [
-      { text: "> git add -A", type: "type", delay: 50 },
-      { text: "\n> git commit -m \"first commit\"", type: "type", delay: 40 },
+      { text: "> git add -A", type: "type", delay: 120 },
+      { text: "\n> git commit -m \"first commit\"", type: "type", delay: 100 },
       { text: "", type: "wait", delay: 800 },
-      { text: 14, type: "delete", delay: 30 }, // delete "first commit"
-      { text: "\"first push\"", type: "type", delay: 50 },
+      { text: 14, type: "delete", delay: 70 }, // delete "first commit"
+      { text: "\"first push\"", type: "type", delay: 120 },
       { text: "", type: "wait", delay: 600 },
-      { text: 12, type: "delete", delay: 30 }, // delete "first push"
-      { text: "\"lpushat lmla7\"", type: "type", delay: 60 },
+      { text: 12, type: "delete", delay: 70 }, // delete "first push"
+      { text: "\"lpushat lmla7\"", type: "type", delay: 150 },
       { text: "", type: "wait", delay: 1000 },
-      { text: "\n> git push", type: "type", delay: 50 },
+      { text: "\n> git push", type: "type", delay: 120 },
       { text: "\n\nEnumerating objects: 42, done.\nCounting objects: 100% (42/42), done.\nDelta compression using up to 10 threads\nCompressing objects: 100% (42/42), done.\nWriting objects: 100% (42/42), 42.00 KiB | 42.00 MiB/s, done.\nTotal 42 (delta 42), reused 0 (delta 0), pack-reused 0 (from 0)\nTo github.com:leet-folks/leet-folks.git\n   c8f617c..89c7545  main -> main", type: "print", delay: 0 },
       { text: "", type: "wait", delay: 1200 },
-      { text: "\n\n> grademe", type: "type", delay: 60 },
+      { text: "\n\n> grademe", type: "type", delay: 150 },
       { text: "", type: "wait", delay: 1000 },
       { text: "\n<span style='color: #ff5f56; font-weight: bold;'>[FAIL]</span> Segmentation fault (core dumped)", type: "print", delay: 0 },
       { text: "", type: "wait", delay: 5000 },
