@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Iceland&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap');
+@import "tailwindcss";
 
 :root {
   --bg-primary: #000000;
@@ -13,6 +14,23 @@
   --glass-border: rgba(255, 255, 255, 0.08);
   --glow-accent: rgba(0, 186, 188, 0.3);
 }
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-accent-alt: var(--accent-alt);
+  --color-accent-gradient: var(--accent-gradient);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-glow-accent: var(--glow-accent);
+
+  --font-cyber: 'Iceland', sans-serif;
+  --font-display: 'Racing Sans One', sans-serif;
+}
+
 
 *,
 *::before,
