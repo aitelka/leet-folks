@@ -79,13 +79,18 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
       setTransitioningCardId(user.id);
     });
 
-    document.startViewTransition(() => {
+    document.documentElement.classList.add('vt-active');
+    const transition = document.startViewTransition(() => {
       flushSync(() => {
         setActiveCardId(user.id);
         setSelectedUser(user);
         setIsModalOpen(true);
         setTransitioningCardId(null);
       });
+    });
+
+    transition.finished.finally(() => {
+      document.documentElement.classList.remove('vt-active');
     });
   }, []);
 
@@ -281,11 +286,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               onClick={(e) => handleUserClick(top3[1], e.currentTarget)} 
               style={{
                 cursor: "pointer",
-                ...(clanColors[top3[1].id] ? { '--clan-color': clanColors[top3[1].id] } : {}),
-                viewTransitionName: transitioningCardId === top3[1].id ? `card-${top3[1].id}` : "none"
+                ...(clanColors[top3[1].id] ? { '--clan-color': clanColors[top3[1].id] } : {})
               } as React.CSSProperties}
             >
-              <div className="podiumAvatarContainer">
+              <div 
+                className="podiumAvatarContainer"
+                style={{ viewTransitionName: transitioningCardId === top3[1].id ? `card-${top3[1].id}` : "none" }}
+              >
                 <div className="podiumRankBadge">2</div>
                 <Image
                   src={top3[1].imageUrl || `https://ui-avatars.com/api/?name=${top3[1].login}&background=0a0a0a&color=00babc&size=200&bold=true`}
@@ -322,11 +329,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               onClick={(e) => handleUserClick(top3[0], e.currentTarget)} 
               style={{
                 cursor: "pointer",
-                ...(clanColors[top3[0].id] ? { '--clan-color': clanColors[top3[0].id] } : {}),
-                viewTransitionName: transitioningCardId === top3[0].id ? `card-${top3[0].id}` : "none"
+                ...(clanColors[top3[0].id] ? { '--clan-color': clanColors[top3[0].id] } : {})
               } as React.CSSProperties}
             >
-              <div className="podiumAvatarContainer">
+              <div 
+                className="podiumAvatarContainer"
+                style={{ viewTransitionName: transitioningCardId === top3[0].id ? `card-${top3[0].id}` : "none" }}
+              >
                 <div className="podiumRankBadge">1</div>
                 <Image
                   src={top3[0].imageUrl || `https://ui-avatars.com/api/?name=${top3[0].login}&background=0a0a0a&color=00babc&size=200&bold=true`}
@@ -363,11 +372,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
               onClick={(e) => handleUserClick(top3[2], e.currentTarget)} 
               style={{
                 cursor: "pointer",
-                ...(clanColors[top3[2].id] ? { '--clan-color': clanColors[top3[2].id] } : {}),
-                viewTransitionName: transitioningCardId === top3[2].id ? `card-${top3[2].id}` : "none"
+                ...(clanColors[top3[2].id] ? { '--clan-color': clanColors[top3[2].id] } : {})
               } as React.CSSProperties}
             >
-              <div className="podiumAvatarContainer">
+              <div 
+                className="podiumAvatarContainer"
+                style={{ viewTransitionName: transitioningCardId === top3[2].id ? `card-${top3[2].id}` : "none" }}
+              >
                 <div className="podiumRankBadge">3</div>
                 <Image
                   src={top3[2].imageUrl || `https://ui-avatars.com/api/?name=${top3[2].login}&background=0a0a0a&color=00babc&size=200&bold=true`}

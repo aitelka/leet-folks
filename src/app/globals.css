@@ -1473,7 +1473,8 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: 0;
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
   padding: 1.5rem;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1627,7 +1628,8 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: 0;
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
   padding: 0.75rem 2rem;
   transition: all 0.3s ease;
   animation: fadeInUp 0.5s ease-out backwards;
@@ -1741,8 +1743,8 @@ h1, h2, h3, h4, h5, h6,
   .podiumPlace {
     flex: 1;
     min-width: 0;
-    padding: 1rem 0.6rem;
-    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    padding: 1rem 0.7rem;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   }
 
   .firstPlace {
@@ -1814,6 +1816,7 @@ h1, h2, h3, h4, h5, h6,
   
   .leaderboardItem {
     padding: 0.6rem 0.75rem;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   }
   
   .leaderboardRank {
@@ -1850,7 +1853,8 @@ h1, h2, h3, h4, h5, h6,
   }
 
   .podiumPlace {
-    padding: 0.75rem 0.4rem;
+    padding: 0.75rem 0.6rem;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   }
 
   .firstPlace .podiumAvatar {
@@ -1923,21 +1927,37 @@ h1, h2, h3, h4, h5, h6,
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  /* backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); */
+  background: transparent;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  isolation: isolate;
+}
+
+.userModalOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .userModalOverlay.visible {
   opacity: 1;
   visibility: visible;
+}
+
+.userModalOverlay.visible::before {
+  opacity: 1;
+  animation: modalBackdropBlurIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Zoomed morph entry animation */
@@ -1972,35 +1992,58 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
+@keyframes modalBackdropBlurIn {
+  0% {
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    backdrop-filter: blur(80px);
+    -webkit-backdrop-filter: blur(80px);
+  }
+}
+
 .userModalContent {
   position: relative;
   width: 90%;
   max-width: 400px;
-  background: var(--bg-secondary);
+  background: transparent;
   padding: 2rem;
-  border-radius: 4px;
-  border: 1px solid var(--glass-border);
-  box-shadow: 
-    0 0 30px rgba(0, 186, 188, 0.15), 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    inset 0 0 10px rgba(0, 186, 188, 0.05);
+  border: none;
+  --modal-cut-size: 24px;
   opacity: 0;
   transform: scale(0.4) translateY(40px);
   filter: blur(8px);
+  isolation: isolate;
+  z-index: 2;
   /* Default exit: morphZoomOut */
-  animation: morphZoomOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: morphZoomOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   contain: layout;
 }
 
 .userModalContent.visible {
-  animation: morphZoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: morphZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: rgba(6, 12, 24, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 186, 188, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
-/* Disable CSS keyframe morph if using View Transitions */
+/* Disable CSS keyframe morph if using View Transitions.
+   The ::before stays at opacity:1 so the VT snapshot captures the dark bg.
+   The VT pseudo-element layer (painted above the DOM) handles the fade-in
+   via ::view-transition-new(modal-overlay) + vt-overlay-in keyframes. */
 .userModalOverlay.vt-modal {
   opacity: 1;
   visibility: visible;
   background: transparent !important;
+}
+
+.userModalOverlay.vt-modal::before {
+  opacity: 1;
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(80px);
 }
 
 .userModalContent.vt-modal {
@@ -2010,17 +2053,34 @@ h1, h2, h3, h4, h5, h6,
   filter: none;
 }
 
-/* Simulated Glowing Border */
+/* Simulated Glowing Border and Background with Cut Edges */
 .userModalContent::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  border: 2px solid var(--accent);
-  border-radius: 4px;
+  background: linear-gradient(135deg, rgba(7, 12, 24, 0.96), var(--bg-secondary));
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  clip-path: polygon(var(--modal-cut-size) 0, 100% 0, 100% calc(100% - var(--modal-cut-size)), calc(100% - var(--modal-cut-size)) 100%, 0 100%, 0 var(--modal-cut-size));
   z-index: -1;
-  box-shadow: 0 0 15px var(--accent);
-  opacity: 0.5;
+  box-shadow: 
+    0 0 30px rgba(0, 186, 188, 0.15), 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 10px rgba(0, 186, 188, 0.05),
+    0 0 15px var(--accent);
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .userModalContent {
+    --modal-cut-size: 16px;
+  }
+}
+
+@media (max-width: 400px) {
+  .userModalContent {
+    --modal-cut-size: 12px;
+  }
 }
 
 .userModalCloseBtn {
@@ -2165,49 +2225,48 @@ h1, h2, h3, h4, h5, h6,
   opacity: 1 !important;
 }
 
-/* Morph duration and easing for all flying components.
+/* Base morph duration, easing, and stacking for ALL VT groups.
+   Uses the universal selector (Level 1) instead of prefix wildcards like
+   card-123, avatar-123 etc. (Level 2) which silently fail in some browsers,
+   causing z-index to not apply and the overlay to render ON TOP of the card.
    By NOT overriding ::view-transition-old and new for these, the browser uses
-   its default `plus-lighter` crossfade, ensuring opacities sum to 1.0 and 
+   its default plus-lighter crossfade, ensuring opacities sum to 1.0 and
    preventing elements from becoming transparent and revealing black backgrounds! */
-::view-transition-group(card-*) {
-  animation-duration: 0.45s !important;
+::view-transition-group(*) {
+  animation-duration: 0.25s !important;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
   z-index: 2;
 }
 
-::view-transition-group(avatar-*),
-::view-transition-group(name-*),
-::view-transition-group(login-*),
-::view-transition-group(level-*) {
-  animation-duration: 0.45s !important;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-  z-index: 3;
+/* Root snapshot stays at the bottom with no morph animation */
+::view-transition-group(root) {
+  animation-duration: 0s !important;
+  z-index: 0;
 }
 
-/* Modal Overlay timings */
+/* Modal Overlay — bg animates slightly faster than the card morph.
+   z-index: 1 ensures it sits BETWEEN root (0) and card content (2). */
 ::view-transition-group(modal-overlay) {
-  animation-duration: 0.45s !important;
+  animation-duration: 0.15s !important;
   z-index: 1;
 }
 
-/* When opening, wait until the morph is almost finished before fading in the dark bg */
 ::view-transition-new(modal-overlay) {
-  animation: vt-overlay-in 0.45s ease both !important;
+  animation: vt-overlay-in 0.15s ease both !important;
 }
 
-/* When closing, fade out the dark bg immediately so it's gone while the card flies back */
 ::view-transition-old(modal-overlay) {
-  animation: vt-overlay-out 0.45s ease both !important;
+  animation: vt-overlay-out 0.15s ease both !important;
 }
 
 @keyframes vt-overlay-in {
-  0%, 60% { opacity: 0; }
+  0% { opacity: 0; }
   100% { opacity: 1; }
 }
 
 @keyframes vt-overlay-out {
   0% { opacity: 1; }
-  40%, 100% { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 /* ========== JUMP TO TOP BUTTON ========== */
