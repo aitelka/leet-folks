@@ -133,9 +133,9 @@ h1, h2, h3, h4, h5, h6,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: rgba(6, 12, 24, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  background: rgba(0, 0, 0, 0.3);
   border-bottom: 1px solid var(--glass-border);
   animation: slideDown 0.8s ease-out;
 }
