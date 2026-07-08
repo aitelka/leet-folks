@@ -152,8 +152,7 @@ h1, h2, h3, h4, h5, h6,
   align-items: center;
   justify-content: space-between;
   background: rgba(6, 12, 24, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  @apply backdrop-blur-md;
   border-bottom: 1px solid var(--glass-border);
   animation: slideDown 0.8s ease-out;
 }
@@ -192,6 +191,7 @@ h1, h2, h3, h4, h5, h6,
   font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
 
 .logoText span {
