@@ -2165,23 +2165,43 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: 0 0 15px rgba(0, 186, 188, 0.4);
 }
 
-/* Custom View Transitions: PowerPoint Morph (No cross-fade ghosting) */
-::view-transition-old(card-*),
-::view-transition-old(avatar-*),
-::view-transition-old(name-*) {
+/* Custom View Transitions: PowerPoint Morph (No cross-fade ghosting for card background) */
+::view-transition-old(card-*) {
   animation: none !important;
   opacity: 0 !important;
 }
 
-::view-transition-new(card-*),
-::view-transition-new(avatar-*),
-::view-transition-new(name-*) {
+::view-transition-new(card-*) {
   animation: none !important;
   opacity: 1 !important;
 }
 
-::view-transition-image-pair(card-*),
+::view-transition-image-pair(card-*) {
+  mix-blend-mode: normal !important;
+}
+
+/* Smooth morph fade animation for avatar and name */
+::view-transition-old(avatar-*),
+::view-transition-old(name-*) {
+  animation: fade-out 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+::view-transition-new(avatar-*),
+::view-transition-new(name-*) {
+  animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
 ::view-transition-image-pair(avatar-*),
 ::view-transition-image-pair(name-*) {
   mix-blend-mode: normal !important;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
