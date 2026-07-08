@@ -2164,3 +2164,24 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bg-primary);
   box-shadow: 0 0 15px rgba(0, 186, 188, 0.4);
 }
+
+/* Custom View Transitions: PowerPoint Morph (No cross-fade ghosting) */
+::view-transition-old(card-*),
+::view-transition-old(avatar-*),
+::view-transition-old(name-*) {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+::view-transition-new(card-*),
+::view-transition-new(avatar-*),
+::view-transition-new(name-*) {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+::view-transition-image-pair(card-*),
+::view-transition-image-pair(avatar-*),
+::view-transition-image-pair(name-*) {
+  mix-blend-mode: normal !important;
+}
