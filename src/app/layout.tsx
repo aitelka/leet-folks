@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { Google_Sans_Code } from "next/font/google";
 import "./globals.css";
+
+const googleSansCode = Google_Sans_Code({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   title: "Leet Folks — Coming Soon",
@@ -25,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={googleSansCode.variable}>
       <body>{children}</body>
     </html>
   );

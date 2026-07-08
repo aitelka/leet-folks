@@ -33,9 +33,7 @@ export default function GitTerminal() {
       { text: "", type: "wait", delay: 1200 },
       { text: "\n\n> grademe", type: "type", delay: 150 },
       { text: "", type: "wait", delay: 1000 },
-      { text: "\n<span style='color: #ff5f56; font-weight: bold;'>[FAIL]</span> Segmentation fault (core dumped)", type: "print", delay: 0 },
-      { text: "", type: "wait", delay: 5000 },
-      { text: "clear", type: "action", delay: 0 },
+      { text: "\n<span style='color: #ff5f56; font-weight: bold;'>[FAIL]</span> Segmentation fault (core dumped)", type: "print", delay: 0 }
     ];
 
     let currentStep = 0;
@@ -43,7 +41,7 @@ export default function GitTerminal() {
 
     const processSequence = async () => {
       if (currentStep >= sequence.length) {
-        currentStep = 0; // Loop the animation
+        return; // Stop the animation
       }
 
       const step = sequence[currentStep];

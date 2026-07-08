@@ -39,7 +39,7 @@ export default async function Home() {
                 <span className="accent">future</span>
               </span>
               <span className="line">
-                together<span className="cursor" />
+                together
               </span>
             </h1>
           </div>

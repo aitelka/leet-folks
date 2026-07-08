@@ -298,7 +298,7 @@ h1, h2, h3, h4, h5, h6,
 .gitTerminalTitle {
   flex-grow: 1;
   text-align: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.8rem;
   color: var(--text-secondary);
   opacity: 0.7;
@@ -312,7 +312,7 @@ h1, h2, h3, h4, h5, h6,
 
 .gitTerminalBody pre {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.9rem;
   color: #a8b2d1;
   white-space: pre-wrap;
@@ -616,7 +616,7 @@ h1, h2, h3, h4, h5, h6,
   }
 
   .heroContent {
-    padding: 0 1.25rem;
+    padding: 6rem 1.25rem 2rem;
     flex-direction: column;
     text-align: center;
     gap: 2rem;
@@ -624,7 +624,12 @@ h1, h2, h3, h4, h5, h6,
 
   .heroTopRow {
     flex-direction: column;
+    align-items: stretch;
     gap: 2rem;
+  }
+
+  .heroRight {
+    width: 100%;
   }
 
   .heroBottomRow {
