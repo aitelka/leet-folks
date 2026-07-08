@@ -109,7 +109,7 @@ export async function GET() {
           const mainCursus = userCursus.find((c) => c.cursus_id !== 9 && c.cursus_id !== 3);
           const poolCursus = userCursus.find((c) => c.cursus_id === 9 || c.cursus_id === 3);
 
-          u.level = mainCursus ? mainCursus.level : poolCursus ? poolCursus.level : 0;
+          u.level = poolCursus ? poolCursus.level : 0;
           u.validatedPool = !!mainCursus || userCursus.length > 1;
         });
       }
