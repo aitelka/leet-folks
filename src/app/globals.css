@@ -293,7 +293,8 @@ h1, h2, h3, h4, h5, h6,
 
 .gitTerminalBody {
   padding: 16px;
-  min-height: 120px;
+  height: 380px;
+  overflow-y: hidden;
 }
 
 .gitTerminalBody pre {
@@ -344,6 +345,7 @@ h1, h2, h3, h4, h5, h6,
 
 .heroTitle .line {
   display: block;
+  white-space: nowrap;
 }
 
 .heroTitle .italic {
