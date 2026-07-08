@@ -34,8 +34,6 @@ export default function GitTerminal() {
       { text: "\n\n> grademe", type: "type", delay: 60 },
       { text: "", type: "wait", delay: 1000 },
       { text: "\n<span style='color: #ff5f56; font-weight: bold;'>[FAIL]</span> Segmentation fault (core dumped)", type: "print", delay: 0 },
-      { text: "", type: "wait", delay: 1500 },
-      { text: "fix_fail", type: "action", delay: 0 },
       { text: "", type: "wait", delay: 5000 },
       { text: "clear", type: "action", delay: 0 },
     ];
@@ -69,12 +67,6 @@ export default function GitTerminal() {
       } else if (step.type === "print") {
         currentText += step.text as string;
         setText(currentText);
-      } else if (step.type === "action" && step.text === "fix_fail") {
-        currentText = currentText.replace(
-          "<span style='color: #ff5f56; font-weight: bold;'>[FAIL]</span> Segmentation fault (core dumped)",
-          "<span style='color: #27c93f; font-weight: bold;'>[SUCCESS]</span> 100/100 Outstanding!"
-        );
-        setText(currentText);
       } else if (step.type === "action" && step.text === "clear") {
         currentText = "";
         setText(currentText);
@@ -97,7 +89,7 @@ export default function GitTerminal() {
           <span className="gitBtn yellow"></span>
           <span className="gitBtn green"></span>
         </div>
-        <div className="gitTerminalTitle">bash — aitelka@macbook</div>
+        <div className="gitTerminalTitle">bash — aaitelka@macbook</div>
       </div>
       <div className="gitTerminalBody">
         <pre>
