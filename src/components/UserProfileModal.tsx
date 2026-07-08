@@ -55,6 +55,7 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
       <div 
         className={`userModalContent ${isVisible ? 'visible' : ''}`} 
         onClick={(e) => e.stopPropagation()}
+        style={{ viewTransitionName: `card-${user.id}` }}
       >
         <button className="userModalCloseBtn" onClick={onClose}>×</button>
         
