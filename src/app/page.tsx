@@ -30,7 +30,6 @@ export default async function Home() {
       {/* Hero Content */}
       <div className="heroContent" id="heroContent">
         <GitTerminal />
-        <span className="heroTagline">Something big is coming</span>
 
         <h1 className="heroTitle">
           <span className="line">
