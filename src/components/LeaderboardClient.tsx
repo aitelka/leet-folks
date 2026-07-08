@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { flushSync } from "react-dom";
+import { useEffect, useState, useRef, useCallback } from "react";
 import UserProfileModal, { ModalUser } from "./UserProfileModal";
 
 interface LeaderboardUser {
@@ -23,10 +22,11 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   const [hasMore, setHasMore] = useState(true);
   const [promoYear, setPromoYear] = useState<string>("all");
   const [clanColors, setClanColors] = useState<Record<number, string>>({});
-  const [clickedUserId, setClickedUserId] = useState<number | null>(null);
+  const [activeCardId, setActiveCardId] = useState<number | null>(null);
   
   const [selectedUser, setSelectedUser] = useState<ModalUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const activeCardRef = useRef<HTMLDivElement | null>(null);
 
   const filteredUsers = promoYear === "all" ? users : users.filter(u => u.poolYear === promoYear);
   const top3 = filteredUsers.slice(0, 3);
@@ -50,41 +50,21 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promoYear, users]);
 
-  const handleUserClick = (user: LeaderboardUser) => {
-    if (!document.startViewTransition) {
-      setSelectedUser(user);
-      setIsModalOpen(true);
-      return;
-    }
-    flushSync(() => {
-      setClickedUserId(user.id);
-    });
-    document.startViewTransition(() => {
-      flushSync(() => {
-        setSelectedUser(user);
-        setIsModalOpen(true);
-        setClickedUserId(null);
-      });
-    });
-  };
+  const handleUserClick = useCallback((user: LeaderboardUser, cardElement: HTMLDivElement | null) => {
+    activeCardRef.current = cardElement;
+    setActiveCardId(user.id);
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  }, []);
 
-  const handleModalClose = () => {
-    if (!document.startViewTransition) {
-      setIsModalOpen(false);
-      return;
-    }
-    
-    const transition = document.startViewTransition(() => {
-      flushSync(() => {
-        setIsModalOpen(false);
-        setClickedUserId(selectedUser?.id || null); // List gains tags
-      });
-    });
-
-    transition.finished.finally(() => {
-      setClickedUserId(null); // Clean up after morph finishes
-    });
-  };
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    // Delay clearing the active card so the exit animation can play
+    setTimeout(() => {
+      setActiveCardId(null);
+      activeCardRef.current = null;
+    }, 400);
+  }, []);
 
   const fetchLeaderboard = async (pageNum: number) => {
     try {
@@ -248,9 +228,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           {/* 2nd Place */}
           {top3[1] && (
             <div 
-              className="podiumPlace secondPlace" 
-              onClick={() => handleUserClick(top3[1])} 
-              style={{ cursor: "pointer", ...(clanColors[top3[1].id] ? { '--clan-color': clanColors[top3[1].id] } : {}), viewTransitionName: clickedUserId === top3[1].id ? `card-${top3[1].id}` : "none" } as React.CSSProperties}
+              className={`podiumPlace secondPlace ${activeCardId === top3[1].id ? 'cardActive' : ''}`}
+              onClick={(e) => handleUserClick(top3[1], e.currentTarget)} 
+              style={{ cursor: "pointer", ...(clanColors[top3[1].id] ? { '--clan-color': clanColors[top3[1].id] } : {}) } as React.CSSProperties}
             >
               <div className="podiumAvatarContainer">
                 <div className="podiumRankBadge">2</div>
@@ -260,10 +240,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={120}
                   height={120}
                   className="podiumAvatar"
-                  style={{ viewTransitionName: clickedUserId === top3[1].id ? `avatar-${top3[1].id}` : "none" }}
                 />
               </div>
-              <span className="podiumName" style={{ viewTransitionName: clickedUserId === top3[1].id ? `name-${top3[1].id}` : "none" }}>{top3[1].displayname}</span>
+              <span className="podiumName">{top3[1].displayname}</span>
               <span className="podiumLogin">@{top3[1].login}</span>
               <span className="podiumLevel">Lvl {top3[1].level.toFixed(2)}</span>
             </div>
@@ -272,9 +251,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           {/* 1st Place */}
           {top3[0] && (
             <div 
-              className="podiumPlace firstPlace" 
-              onClick={() => handleUserClick(top3[0])} 
-              style={{ cursor: "pointer", ...(clanColors[top3[0].id] ? { '--clan-color': clanColors[top3[0].id] } : {}), viewTransitionName: clickedUserId === top3[0].id ? `card-${top3[0].id}` : "none" } as React.CSSProperties}
+              className={`podiumPlace firstPlace ${activeCardId === top3[0].id ? 'cardActive' : ''}`}
+              onClick={(e) => handleUserClick(top3[0], e.currentTarget)} 
+              style={{ cursor: "pointer", ...(clanColors[top3[0].id] ? { '--clan-color': clanColors[top3[0].id] } : {}) } as React.CSSProperties}
             >
               <div className="podiumAvatarContainer">
                 <div className="podiumRankBadge">1</div>
@@ -284,10 +263,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={160}
                   height={160}
                   className="podiumAvatar"
-                  style={{ viewTransitionName: clickedUserId === top3[0].id ? `avatar-${top3[0].id}` : "none" }}
                 />
               </div>
-              <span className="podiumName" style={{ viewTransitionName: clickedUserId === top3[0].id ? `name-${top3[0].id}` : "none" }}>{top3[0].displayname}</span>
+              <span className="podiumName">{top3[0].displayname}</span>
               <span className="podiumLogin">@{top3[0].login}</span>
               <span className="podiumLevel">Lvl {top3[0].level.toFixed(2)}</span>
             </div>
@@ -296,9 +274,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           {/* 3rd Place */}
           {top3[2] && (
             <div 
-              className="podiumPlace thirdPlace" 
-              onClick={() => handleUserClick(top3[2])} 
-              style={{ cursor: "pointer", ...(clanColors[top3[2].id] ? { '--clan-color': clanColors[top3[2].id] } : {}), viewTransitionName: clickedUserId === top3[2].id ? `card-${top3[2].id}` : "none" } as React.CSSProperties}
+              className={`podiumPlace thirdPlace ${activeCardId === top3[2].id ? 'cardActive' : ''}`}
+              onClick={(e) => handleUserClick(top3[2], e.currentTarget)} 
+              style={{ cursor: "pointer", ...(clanColors[top3[2].id] ? { '--clan-color': clanColors[top3[2].id] } : {}) } as React.CSSProperties}
             >
               <div className="podiumAvatarContainer">
                 <div className="podiumRankBadge">3</div>
@@ -308,10 +286,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                   width={110}
                   height={110}
                   className="podiumAvatar"
-                  style={{ viewTransitionName: clickedUserId === top3[2].id ? `avatar-${top3[2].id}` : "none" }}
                 />
               </div>
-              <span className="podiumName" style={{ viewTransitionName: clickedUserId === top3[2].id ? `name-${top3[2].id}` : "none" }}>{top3[2].displayname}</span>
+              <span className="podiumName">{top3[2].displayname}</span>
               <span className="podiumLogin">@{top3[2].login}</span>
               <span className="podiumLevel">Lvl {top3[2].level.toFixed(2)}</span>
             </div>
@@ -323,10 +300,10 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
       <div className="leaderboardList">
         {remaining.map((user, index) => (
           <div 
-            className="leaderboardItem" 
+            className={`leaderboardItem ${activeCardId === user.id ? 'cardActive' : ''}`}
             key={user.id} 
-            style={{ animationDelay: `${Math.min(index * 0.05, 1)}s`, cursor: "pointer", viewTransitionName: clickedUserId === user.id ? `card-${user.id}` : "none" }}
-            onClick={() => handleUserClick(user)}
+            style={{ animationDelay: `${Math.min(index * 0.05, 1)}s`, cursor: "pointer" }}
+            onClick={(e) => handleUserClick(user, e.currentTarget)}
           >
             <div className="leaderboardRank">{index + 4}</div>
             <Image
@@ -335,10 +312,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
                 width={72}
                 height={72}
                 className="leaderboardAvatar"
-                style={{ viewTransitionName: clickedUserId === user.id ? `avatar-${user.id}` : "none" }}
             />
             <div className="leaderboardItemInfo">
-              <span className="leaderboardItemName" style={{ viewTransitionName: clickedUserId === user.id ? `name-${user.id}` : "none" }}>{user.displayname}</span>
+              <span className="leaderboardItemName">{user.displayname}</span>
               <span className="leaderboardItemLogin">@{user.login}</span>
             </div>
             <div className="leaderboardItemLevel">

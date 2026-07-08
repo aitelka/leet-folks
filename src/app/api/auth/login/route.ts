@@ -27,8 +27,9 @@ export async function GET() {
     url.searchParams.append("state", state);
     
     return NextResponse.redirect(url.toString());
-  } catch (err: any) {
+  } catch (err) {
     console.error("Login Error:", err);
-    return new NextResponse(`Error: ${err.message}`, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new NextResponse(`Error: ${message}`, { status: 500 });
   }
 }

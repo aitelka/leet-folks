@@ -1478,7 +1478,7 @@ h1, h2, h3, h4, h5, h6,
   padding: 1.5rem;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   position: relative;
 }
 
@@ -1585,6 +1585,7 @@ h1, h2, h3, h4, h5, h6,
   text-align: center;
   color: var(--clan-color, var(--rank-color));
   text-shadow: 0 0 10px var(--clan-color, var(--rank-color));
+  transition: opacity 0.3s ease;
 }
 
 .firstPlace .podiumName {
@@ -1595,12 +1596,34 @@ h1, h2, h3, h4, h5, h6,
   font-size: 1rem;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
+  transition: opacity 0.3s ease;
 }
 
 .podiumLevel {
   font-weight: 800;
   font-size: 1.4rem;
   color: var(--accent);
+  transition: opacity 0.3s ease;
+}
+
+/* Hide content on the active card while modal is open */
+.cardActive .podiumName,
+.cardActive .podiumLogin,
+.cardActive .podiumLevel,
+.cardActive .leaderboardItemInfo,
+.cardActive .leaderboardItemLevel,
+.cardActive .leaderboardRank {
+  opacity: 0;
+}
+
+.cardActive.podiumPlace {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px rgba(0, 186, 188, 0.2), inset 0 0 30px rgba(0, 186, 188, 0.05);
+}
+
+.cardActive.leaderboardItem {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 15px rgba(0, 186, 188, 0.15);
 }
 
 .leaderboardList {
@@ -1635,6 +1658,7 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 800;
   color: var(--text-secondary);
   width: 60px;
+  transition: opacity 0.3s ease;
 }
 
 .leaderboardAvatar {
@@ -1644,7 +1668,7 @@ h1, h2, h3, h4, h5, h6,
   margin-right: 2rem;
   border: 2px solid var(--glass-border);
   background: var(--bg-secondary);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
 }
 
 .leaderboardItem:hover .leaderboardAvatar {
@@ -1656,6 +1680,7 @@ h1, h2, h3, h4, h5, h6,
   display: flex;
   flex-direction: column;
   flex: 1;
+  transition: opacity 0.3s ease;
 }
 
 .leaderboardItemName {
@@ -1672,6 +1697,7 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 700;
   font-size: 1.6rem;
   color: var(--accent);
+  transition: opacity 0.3s ease;
 }
 
 .loadMoreContainer {
@@ -1713,54 +1739,250 @@ h1, h2, h3, h4, h5, h6,
   font-size: 0.9rem;
 }
 
+/* ========== LEADERBOARD MOBILE - Desktop-style but compact ========== */
 @media (max-width: 768px) {
   .podiumContainer {
-    gap: 1rem;
-    align-items: center;
-    flex-direction: column;
+    width: 100%;
+    gap: 0.6rem;
+    margin: 2rem auto 3rem;
+    min-height: 180px;
+    padding: 0 0.5rem;
+    /* KEEP horizontal layout like desktop */
+    justify-content: space-between;
+  }
+
+  .podiumPlace {
+    flex: 1;
+    min-width: 0;
+    padding: 1rem 0.6rem;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+
+  .firstPlace {
+    padding-bottom: 1.75rem;
+  }
+
+  .secondPlace {
+    padding-bottom: 1.25rem;
+  }
+
+  .thirdPlace {
+    padding-bottom: 0.75rem;
+  }
+
+  .podiumAvatar {
+    border-width: 2px;
+  }
+
+  .firstPlace .podiumAvatar {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .secondPlace .podiumAvatar {
+    width: 65px !important;
+    height: 65px !important;
+  }
+
+  .thirdPlace .podiumAvatar {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .podiumAvatarContainer {
+    margin-bottom: 0.5rem;
+  }
+
+  .podiumRankBadge {
+    font-size: 2.2rem;
+    top: -10px;
+    right: -10px;
+  }
+
+  .podiumName {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+  }
+
+  .firstPlace .podiumName {
+    font-size: 0.9rem;
+    max-width: 100px;
+  }
+
+  .podiumLogin {
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .podiumLevel {
+    font-size: 0.8rem;
+  }
+
+  .podiumPlace:hover {
+    transform: translateY(-4px);
   }
   
-  .firstPlace { order: -1; padding-bottom: 1.5rem; width: 100%; max-width: 300px; }
-  .secondPlace { width: 100%; max-width: 300px; }
-  .thirdPlace { width: 100%; max-width: 300px; }
-  
   .leaderboardItem {
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.75rem;
   }
   
   .leaderboardRank {
-    width: 30px;
-    font-size: 1.2rem;
+    width: 28px;
+    font-size: 1rem;
   }
   
   .leaderboardAvatar {
     width: 40px;
     height: 40px;
-    margin-right: 1rem;
+    margin-right: 0.75rem;
+  }
+
+  .leaderboardItemName {
+    font-size: 0.85rem;
+  }
+
+  .leaderboardItemLogin {
+    font-size: 0.7rem;
+  }
+
+  .leaderboardItemLevel {
+    font-size: 0.9rem;
+  }
+
+  .leaderboardList {
+    gap: 0.6rem;
   }
 }
 
-/* ========== USER PROFILE MODAL ========== */
+@media (max-width: 400px) {
+  .podiumContainer {
+    gap: 0.35rem;
+  }
+
+  .podiumPlace {
+    padding: 0.75rem 0.4rem;
+  }
+
+  .firstPlace .podiumAvatar {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .secondPlace .podiumAvatar {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .thirdPlace .podiumAvatar {
+    width: 45px !important;
+    height: 45px !important;
+  }
+
+  .podiumName {
+    font-size: 0.7rem;
+    max-width: 70px;
+  }
+
+  .firstPlace .podiumName {
+    font-size: 0.75rem;
+    max-width: 80px;
+  }
+
+  .podiumLogin {
+    font-size: 0.6rem;
+  }
+
+  .podiumLevel {
+    font-size: 0.7rem;
+  }
+
+  .podiumRankBadge {
+    font-size: 1.6rem;
+    top: -8px;
+    right: -8px;
+  }
+
+  .leaderboardItemName {
+    font-size: 0.78rem;
+  }
+
+  .leaderboardItemLogin {
+    font-size: 0.65rem;
+  }
+
+  .leaderboardItemLevel {
+    font-size: 0.8rem;
+  }
+
+  .leaderboardRank {
+    width: 24px;
+    font-size: 0.85rem;
+  }
+
+  .leaderboardAvatar {
+    width: 34px;
+    height: 34px;
+    margin-right: 0.5rem;
+  }
+}
+
+/* ========== USER PROFILE MODAL — Zoomed Morph ========== */
 .userModalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 
 .userModalOverlay.visible {
   opacity: 1;
   visibility: visible;
+}
+
+/* Zoomed morph entry animation */
+@keyframes morphZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(40px);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04) translateY(-4px);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes morphZoomOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4) translateY(40px);
+    filter: blur(8px);
+  }
 }
 
 .userModalContent {
@@ -1769,7 +1991,6 @@ h1, h2, h3, h4, h5, h6,
   max-width: 400px;
   background: var(--bg-secondary);
   padding: 2rem;
-  /* Cyberpunk cut edges */
   clip-path: polygon(
     20px 0, 
     100% 0, 
@@ -1779,15 +2000,19 @@ h1, h2, h3, h4, h5, h6,
     0 20px
   );
   border: 1px solid var(--glass-border);
-  box-shadow: 0 0 20px rgba(0, 186, 188, 0.1), inset 0 0 10px rgba(0, 186, 188, 0.05);
-  transform: translateY(20px) scale(0.95);
+  box-shadow: 
+    0 0 30px rgba(0, 186, 188, 0.15), 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 10px rgba(0, 186, 188, 0.05);
   opacity: 0;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  transform: scale(0.4) translateY(40px);
+  filter: blur(8px);
+  /* Default exit: morphZoomOut */
+  animation: morphZoomOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .userModalContent.visible {
-  transform: translateY(0) scale(1);
-  opacity: 1;
+  animation: morphZoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Simulated Glowing Border */
@@ -1796,7 +2021,6 @@ h1, h2, h3, h4, h5, h6,
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   border: 2px solid var(--accent);
-  /* Cut edge border */
   clip-path: polygon(
     20px 0, 
     100% 0, 
@@ -1822,11 +2046,12 @@ h1, h2, h3, h4, h5, h6,
   line-height: 1;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
+  z-index: 10;
 }
 
 .userModalCloseBtn:hover {
   color: var(--accent);
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(90deg);
 }
 
 .userModalHeader {
@@ -1902,7 +2127,7 @@ h1, h2, h3, h4, h5, h6,
   color: var(--text-secondary);
 }
 
-.statValue {
+.userModalStatBox .statValue {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);

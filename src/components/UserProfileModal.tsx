@@ -29,7 +29,9 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => {
-        setIsVisible(true);
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
       });
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -39,7 +41,7 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
       setIsVisible(false);
       document.body.style.paddingRight = '0px';
       document.body.style.overflow = 'unset';
-      const timeout = setTimeout(() => setIsRendered(false), 300);
+      const timeout = setTimeout(() => setIsRendered(false), 400);
       return () => clearTimeout(timeout);
     }
   }, [isOpen]);
@@ -53,7 +55,6 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
       <div 
         className={`userModalContent ${isVisible ? 'visible' : ''}`} 
         onClick={(e) => e.stopPropagation()}
-        style={{ viewTransitionName: isOpen ? `card-${user.id}` : 'none' }}
       >
         <button className="userModalCloseBtn" onClick={onClose}>×</button>
         
@@ -65,11 +66,10 @@ export default function UserProfileModal({ isOpen, onClose, user }: UserProfileM
               width={120}
               height={120}
               className="userModalAvatar"
-              style={{ viewTransitionName: isOpen ? `avatar-${user.id}` : 'none' }}
             />
           </div>
           <div className="userModalIdentity">
-            <h2 className="userModalName" style={{ viewTransitionName: isOpen ? `name-${user.id}` : 'none' }}>{user.displayname}</h2>
+            <h2 className="userModalName">{user.displayname}</h2>
             <a 
               href={`https://profile.intra.42.fr/users/${user.login}`} 
               target="_blank" 
