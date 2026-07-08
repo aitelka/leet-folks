@@ -29,29 +29,33 @@ export default async function Home() {
 
       {/* Hero Content */}
       <div className="heroContent" id="heroContent">
-        <div className="heroLeft">
-          <h1 className="heroTitle">
-            <span className="line">
-              We build <span className="italic">the</span>
-            </span>
-            <span className="line">
-              <span className="accent">future</span>
-            </span>
-            <span className="line">
-              together<span className="cursor" />
-            </span>
-          </h1>
+        <div className="heroTopRow">
+          <div className="heroLeft">
+            <h1 className="heroTitle">
+              <span className="line">
+                We build <span className="italic">the</span>
+              </span>
+              <span className="line">
+                <span className="accent">future</span>
+              </span>
+              <span className="line">
+                together<span className="cursor" />
+              </span>
+            </h1>
+          </div>
+          
+          <div className="heroRight">
+            <GitTerminal />
+          </div>
+        </div>
 
+        <div className="heroBottomRow">
           <p className="heroSubtitle">
             A peer-driven community redefining what it means to build, learn, and
             grow together. No barriers. No limits. Just people who code.
           </p>
 
           <Countdown />
-        </div>
-        
-        <div className="heroRight">
-          <GitTerminal />
         </div>
       </div>
 

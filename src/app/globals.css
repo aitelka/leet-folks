@@ -223,10 +223,22 @@ h1, h2, h3, h4, h5, h6,
   width: 100%;
   padding: 0 4rem;
   display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.heroTopRow {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 4rem;
+}
+
+.heroBottomRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   text-align: left;
 }
 
@@ -235,6 +247,7 @@ h1, h2, h3, h4, h5, h6,
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  text-align: left;
 }
 
 .heroRight {
@@ -608,6 +621,16 @@ h1, h2, h3, h4, h5, h6,
     flex-direction: column;
     text-align: center;
     gap: 2rem;
+  }
+
+  .heroTopRow {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .heroBottomRow {
+    align-items: center;
+    text-align: center;
   }
 
   .heroLeft {
