@@ -219,7 +219,7 @@ h1, h2, h3, h4, h5, h6,
 .heroContent {
   position: relative;
   z-index: 10;
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   padding: 0 4rem;
   display: flex;
@@ -259,7 +259,7 @@ h1, h2, h3, h4, h5, h6,
 /* ========== GIT TERMINAL ========== */
 .gitTerminal {
   width: 100%;
-  max-width: 500px;
+  max-width: 650px;
   margin-bottom: 0;
   background: rgba(6, 12, 24, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.1);
