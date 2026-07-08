@@ -2307,3 +2307,180 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: 0 0 20px rgba(0, 186, 188, 0.5);
   transform: translateY(-5px);
 }
+
+/* ==========================================================================
+   Authentication Loading Page
+   ========================================================================== */
+.authLoadingPage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.authLoadingBg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-primary);
+  background-image: radial-gradient(
+    circle at center,
+    rgba(0, 186, 188, 0.1) 0%,
+    transparent 50%
+  );
+  z-index: 0;
+}
+
+.authLoadingCard {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: rgba(6, 12, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: authCardFadeIn 0.5s ease forwards;
+}
+
+@keyframes authCardFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.authSpinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.authSpinnerRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: rgba(0, 186, 188, 0.2);
+  border-bottom-color: rgba(0, 186, 188, 0.05);
+  border-left-color: transparent;
+  animation: authSpin 1s linear infinite;
+}
+
+.authSpinnerRingDelay {
+  inset: 10px;
+  border-top-color: rgba(0, 186, 188, 0.5);
+  border-right-color: transparent;
+  border-bottom-color: var(--accent);
+  border-left-color: rgba(0, 186, 188, 0.1);
+  animation-duration: 1.5s;
+  animation-direction: reverse;
+}
+
+@keyframes authSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.authSpinnerCore {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(0, 186, 188, 0.5);
+  animation: authPulse 2s ease-in-out infinite;
+}
+
+@keyframes authPulse {
+  0%, 100% { opacity: 0.7; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); text-shadow: 0 0 20px var(--accent); }
+}
+
+.authLoadingTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.authLoadingSubtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.authLoadingDots {
+  display: flex;
+  gap: 6px;
+}
+
+.authDot {
+  width: 6px;
+  height: 6px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  animation: authDotBounce 1.4s infinite ease-in-out both;
+}
+
+.authDot:nth-child(1) { animation-delay: -0.32s; }
+.authDot:nth-child(2) { animation-delay: -0.16s; }
+.authDot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes authDotBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; background: var(--accent); }
+}
+
+/* Error State */
+.authErrorCard {
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.authErrorIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.authRetryBtn {
+  margin-top: 24px;
+  padding: 12px 32px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.authRetryBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
