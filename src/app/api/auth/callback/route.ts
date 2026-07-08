@@ -68,9 +68,9 @@ export async function GET(request: NextRequest) {
     const userData = await userResponse.json();
 
     // Create session
-    await createSession(userData);
+    await createSession(userData, accessToken);
 
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/leaderboard", request.url));
   } catch (err) {
     console.error("OAuth callback error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

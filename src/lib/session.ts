@@ -12,6 +12,10 @@ export interface SessionPayload {
   userId: number;
   login: string;
   avatarUrl: string;
+  accessToken: string;
+  poolMonth: string;
+  poolYear: string;
+  campusId: number;
   expiresAt: Date;
 }
 
@@ -34,12 +38,17 @@ export async function decrypt(session: string | undefined = "") {
   }
 }
 
-export async function createSession(user: { id: number; login: string; image?: { link?: string } }) {
+export async function createSession(user: { id: number; login: string; image?: { link?: string }; pool_month?: string; pool_year?: string; campus_users?: { campus_id: number; is_primary: boolean }[] }, accessToken: string) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const primaryCampus = user.campus_users?.find(cu => cu.is_primary);
   const session = await encrypt({
     userId: user.id,
     login: user.login,
     avatarUrl: user.image?.link || "",
+    accessToken,
+    poolMonth: user.pool_month || "",
+    poolYear: user.pool_year || "",
+    campusId: primaryCampus?.campus_id || 0,
     expiresAt,
   });
   
