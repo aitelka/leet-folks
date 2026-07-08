@@ -2,6 +2,7 @@ import Countdown from "@/components/Countdown";
 import Particles from "@/components/Particles";
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
+import GitTerminal from "@/components/GitTerminal";
 import { getSession } from "@/lib/session";
 
 export default async function Home() {
@@ -28,6 +29,7 @@ export default async function Home() {
 
       {/* Hero Content */}
       <div className="heroContent" id="heroContent">
+        <GitTerminal />
         <span className="heroTagline">Something big is coming</span>
 
         <h1 className="heroTitle">
