@@ -94,7 +94,7 @@ export default function GitTerminal() {
           <span className="gitBtn yellow"></span>
           <span className="gitBtn green"></span>
         </div>
-        <div className="gitTerminalTitle">bash — aaitelka@macbook</div>
+        <div className="gitTerminalTitle">bash — leetfolks@macbook</div>
       </div>
       <div className="gitTerminalBody" ref={bodyRef}>
         <pre>
