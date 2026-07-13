@@ -68,7 +68,7 @@ export default function AuthButton({ user }: { user: User | null }) {
             )}
             {user.isStudent && (
               <Link href="/pool" className="dropdownLink" onClick={() => setDropdownOpen(false)}>
-                My Pool
+                Pool
               </Link>
             )}
           </div>

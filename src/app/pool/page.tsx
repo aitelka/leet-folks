@@ -38,14 +38,11 @@ export default async function PoolPage() {
       {/* Page Content */}
       <div className="poolContainer" id="poolContainer">
         <div className="poolHeader">
-          <span className="poolBadge">
-            {session.poolMonth} {session.poolYear}
-          </span>
           <h1 className="poolTitle cyberpunk-text">
-            My <span className="accent">Pool</span>
+            Pool <span className="accent">Leaderboard</span>
           </h1>
           <p className="poolSubtitle">
-            Top performers from your pool
+            Top performers from 42 pools
           </p>
         </div>
 

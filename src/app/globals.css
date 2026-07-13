@@ -1878,6 +1878,22 @@ h1, h2, h3, h4, h5, h6,
   cursor: not-allowed;
 }
 
+.loadSpinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  margin-right: 0.6rem;
+  animation: loadSpin 0.7s linear infinite;
+}
+
+@keyframes loadSpin {
+  to { transform: rotate(360deg); }
+}
+
 .endOfList {
   text-align: center;
   margin-top: 3rem;

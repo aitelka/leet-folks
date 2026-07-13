@@ -22,6 +22,11 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [promoYear, setPromoYear] = useState<string>("all");
+  const [selectedPoolMonth, setSelectedPoolMonth] = useState<string>("");
+  const [selectedPoolYear, setSelectedPoolYear] = useState<string>("");
+  const [selectedCampusId, setSelectedCampusId] = useState<string>("");
+  const [campuses, setCampuses] = useState<{ id: number; name: string; city: string; country: string }[]>([]);
+  const [myCountry, setMyCountry] = useState<string>("");
   const [clanColors, setClanColors] = useState<Record<number, string>>({});
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
   const [transitioningCardId, setTransitioningCardId] = useState<number | null>(null);
@@ -30,9 +35,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const activeCardRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const filteredUsers = promoYear === "all" ? users : users.filter(u => u.poolYear === promoYear);
   const top3 = filteredUsers.slice(0, 3);
+
+  const campusesByCountry = campuses.reduce((groups, c) => {
+    const key = c.country === myCountry ? `${myCountry} (My Country)` : c.country;
+    (groups[key] ||= []).push(c);
+    return groups;
+  }, {} as Record<string, typeof campuses>);
+  const countryOrder = Object.keys(campusesByCountry).sort((a, b) =>
+    a.endsWith("(My Country)") ? -1 : b.endsWith("(My Country)") ? 1 : a.localeCompare(b)
+  );
   const remaining = filteredUsers.slice(3);
 
   useEffect(() => {
@@ -120,9 +135,19 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     });
   }, [selectedUser]);
 
-  const fetchLeaderboard = async (pageNum: number) => {
+  const fetchLeaderboard = async (pageNum: number, pMonth?: string, pYear?: string, pCampusId?: string) => {
     try {
-      const endpoint = dataSource === "pool" ? `/api/pool` : `/api/leaderboard?page=${pageNum}&limit=50`;
+      let endpoint = dataSource === "pool" ? `/api/pool?page=${pageNum}` : `/api/leaderboard?page=${pageNum}&limit=50`;
+
+      if (dataSource === "pool") {
+        const m = pMonth || selectedPoolMonth;
+        const y = pYear || selectedPoolYear;
+        const c = pCampusId !== undefined ? pCampusId : selectedCampusId;
+        endpoint = `/api/pool?page=${pageNum}`;
+        if (m && y) endpoint += `&month=${m}&year=${y}`;
+        if (c) endpoint += `&campus_id=${c}`;
+      }
+
       const res = await fetch(endpoint);
       if (!res.ok) {
         const err = await res.json();
@@ -136,6 +161,10 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
       
       if (pageNum === 1) {
         setUsers(data.users);
+        if (dataSource === "pool") {
+          setSelectedPoolMonth(data.poolMonth);
+          setSelectedPoolYear(data.poolYear);
+        }
       } else {
         setUsers((prev) => [...prev, ...data.users]);
       }
@@ -151,8 +180,27 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLeaderboard(1);
+    if (dataSource === "pool") {
+      fetch("/api/campuses")
+        .then((res) => res.json())
+        .then((data) => {
+          const list = data.campuses || [];
+          setCampuses(list);
+          setMyCountry(list.find((c: { id: number }) => c.id === data.myCampusId)?.country || "");
+        })
+        .catch((err) => console.error("Campuses fetch err", err));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleCampusChange = (campusId: string) => {
+    setSelectedCampusId(campusId);
+    setSelectedPoolMonth("");
+    setSelectedPoolYear("");
+    setPage(1);
+    setLoading(true);
+    fetchLeaderboard(1, "", "", campusId);
+  };
 
   const loadMore = () => {
     if (!loadingMore && hasMore) {
@@ -163,16 +211,110 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     }
   };
 
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, loading, loadingMore, page]);
+
+  const filtersUi = (
+    <>
+      {dataSource === "leaderboard" && (
+        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
+          <select
+            className="poolFilterSelect"
+            value={promoYear}
+            onChange={(e) => {
+              setPromoYear(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="all">All Promo Years</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+            <option value="2018">2018</option>
+          </select>
+        </div>
+      )}
+
+      {dataSource === "pool" && (
+        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center", display: "flex", gap: "1rem" }}>
+          <select
+            className="poolFilterSelect"
+            value={selectedCampusId}
+            onChange={(e) => handleCampusChange(e.target.value)}
+          >
+            <option value="">My Campus</option>
+            {countryOrder.map((country) => (
+              <optgroup key={country} label={country}>
+                {campusesByCountry[country].map((c) => (
+                  <option key={c.id} value={c.id.toString()}>{c.city}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <select
+            className="poolFilterSelect"
+            value={selectedPoolMonth}
+            onChange={(e) => {
+              const newMonth = e.target.value;
+              setSelectedPoolMonth(newMonth);
+              setPage(1);
+              setLoading(true);
+              fetchLeaderboard(1, newMonth, selectedPoolYear, selectedCampusId);
+            }}
+          >
+            <option value="january">January</option>
+            <option value="february">February</option>
+            <option value="march">March</option>
+            <option value="april">April</option>
+            <option value="may">May</option>
+            <option value="june">June</option>
+            <option value="july">July</option>
+            <option value="august">August</option>
+            <option value="september">September</option>
+            <option value="october">October</option>
+            <option value="november">November</option>
+            <option value="december">December</option>
+          </select>
+          <select
+            className="poolFilterSelect"
+            value={selectedPoolYear}
+            onChange={(e) => {
+              const newYear = e.target.value;
+              setSelectedPoolYear(newYear);
+              setPage(1);
+              setLoading(true);
+              fetchLeaderboard(1, selectedPoolMonth, newYear, selectedCampusId);
+            }}
+          >
+            {Array.from({ length: new Date().getFullYear() - 2012 }, (_, i) => 2013 + i).reverse().map(year => (
+              <option key={year} value={year.toString()}>{year}</option>
+            ))}
+          </select>
+        </div>
+      )}
+    </>
+  );
+
   if (loading) {
     const shimmerItems = Array.from({ length: 15 }, (_, i) => i);
     return (
       <div className="leaderboardContainer" id="leaderboardContainer">
-        {/* Shimmer Filters */}
-        {dataSource === "leaderboard" && (
-          <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
-            <div className="shimmer poolFilterSelect" style={{ width: "200px", height: "40px", border: "none" }}></div>
-          </div>
-        )}
+        {/* Filters */}
+        {filtersUi}
 
         {/* Shimmer Podium */}
         <div className="podiumContainer">
@@ -243,36 +385,14 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     );
   }
 
-  if (filteredUsers.length === 0) {
-    return (
-      <div className="poolEmpty">
-        <p>No leaderboard data available.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="leaderboardContainer" id="leaderboardContainer">
       {/* Filters */}
-      {dataSource === "leaderboard" && (
-        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
-          <select 
-            className="poolFilterSelect" 
-            value={promoYear} 
-            onChange={(e) => {
-              setPromoYear(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="all">All Promo Years</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="2019">2019</option>
-            <option value="2018">2018</option>
-          </select>
+      {filtersUi}
+
+      {filteredUsers.length === 0 && (
+        <div className="poolEmpty">
+          <p>No leaderboard data available.</p>
         </div>
       )}
 
@@ -468,13 +588,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
       </div>
 
       {hasMore && (
-        <div className="loadMoreContainer">
-          <button 
-            className="loadMoreBtn" 
-            onClick={loadMore} 
+        <div className="loadMoreContainer" ref={sentinelRef}>
+          <button
+            className="loadMoreBtn"
+            onClick={loadMore}
             disabled={loadingMore}
           >
-            {loadingMore ? "Loading..." : "Load More"}
+            {loadingMore ? <><span className="loadSpinner" />Loading...</> : "Load More"}
           </button>
         </div>
       )}
