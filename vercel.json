@@ -8,6 +8,12 @@
       "main": true
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/refresh-pools",
+      "schedule": "0 */4 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
