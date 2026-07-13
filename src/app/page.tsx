@@ -1,4 +1,3 @@
-import Countdown from "@/components/Countdown";
 import Particles from "@/components/Particles";
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
@@ -54,17 +53,6 @@ export default async function Home() {
             A peer-driven community redefining what it means to build, learn, and
             grow together. No barriers. No limits. Just people who code.
           </p>
-
-          <Countdown />
-        </div>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="bottomBar" id="bottomBar">
-
-        <div className="scrollHint">
-          <span>Stay tuned</span>
-          <div className="scrollLine" />
         </div>
       </div>
     </section>
