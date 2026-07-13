@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCache } from "@vercel/functions";
 import { getSession } from "@/lib/session";
 
 const FORTYTWO_API_BASE = "https://api.intra.42.fr/v2";
@@ -29,15 +30,101 @@ interface CursusUser {
   level: number;
 }
 
-export async function GET() {
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+
+const PAGE_SIZE = 50;
+
+type CachedPool = { poolMonth: string; poolYear: string; users: { level: number }[] };
+
+function paginate(data: CachedPool, page: number, minLevel: number | null, maxLevel: number | null) {
+  const users = (minLevel === null && maxLevel === null)
+    ? data.users
+    : data.users.filter((u) => (minLevel === null || u.level >= minLevel) && (maxLevel === null || u.level <= maxLevel));
+  const start = (page - 1) * PAGE_SIZE;
+  return {
+    poolMonth: data.poolMonth,
+    poolYear: data.poolYear,
+    total: users.length,
+    users: users.slice(start, start + PAGE_SIZE),
+    hasMore: start + PAGE_SIZE < users.length,
+  };
+}
+
+// Shared across function instances/regions via Vercel Runtime Cache (was an in-memory Map before)
+const cache = getCache({ namespace: "pool" });
+const CACHE_TTL = 5 * 60 * 1000; // freshness window (ms)
+const CACHE_STORE_SECONDS = 60 * 60; // how long an entry stays available as a stale-on-error fallback
+
+// 42 API rate-limits hard (2 req/s); retry on 429 instead of failing the whole request
+async function ftFetch(url: string, token: string): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status !== 429 || attempt >= 3) return res;
+    const wait = Number(res.headers.get("retry-after")) || 1;
+    await new Promise((r) => setTimeout(r, wait * 1000));
+  }
+}
+
+// Most recent pool that has users on this campus
+async function latestPool(campusId: number, token: string): Promise<{ month: string; year: string } | null> {
+  const params = new URLSearchParams({
+    "filter[primary_campus_id]": campusId.toString(),
+    "sort": "-pool_year,-created_at",
+    "page[size]": "50",
+  });
+  const res = await ftFetch(`${FORTYTWO_API_BASE}/users?${params}`, token);
+  if (!res.ok) return null;
+  const users: FortyTwoUser[] = await res.json();
+  const withPool = users.filter((u) => u.pool_month && u.pool_year);
+  if (withPool.length === 0) return null;
+  const year = withPool.reduce((max, u) => (u.pool_year > max ? u.pool_year : max), "");
+  // ponytail: latest month found within the first 50 users of the newest year; good enough
+  const month = withPool
+    .filter((u) => u.pool_year === year)
+    .reduce((max, u) => (MONTHS.indexOf(u.pool_month) > MONTHS.indexOf(max) ? u.pool_month : max), "january");
+  return { month, year };
+}
+
+export async function GET(request: Request) {
   const session = await getSession();
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!session.poolMonth || !session.poolYear) {
-    return NextResponse.json({ error: "No pool info found for this user" }, { status: 400 });
+  const { searchParams } = new URL(request.url);
+  let poolMonth = searchParams.get("month") || "";
+  let poolYear = searchParams.get("year") || "";
+  const pageNum = Math.max(1, Number(searchParams.get("page")) || 1);
+  const minLevel = searchParams.has("minLevel") ? Number(searchParams.get("minLevel")) : null;
+  const maxLevel = searchParams.has("maxLevel") ? Number(searchParams.get("maxLevel")) : null;
+  const campusId = Number(searchParams.get("campus_id")) || session.campusId;
+
+  // Default to the campus's most recent pool
+  if (!poolMonth || !poolYear) {
+    const latestKey = `latest-${campusId}`;
+    const cachedLatest = (await cache.get(latestKey)) as { time: number; data: unknown } | null;
+    let latest = cachedLatest && Date.now() - cachedLatest.time < CACHE_TTL
+      ? (cachedLatest.data as { month: string; year: string })
+      : null;
+    if (!latest) {
+      latest = await latestPool(campusId, session.accessToken);
+      if (latest) {
+        await cache.set(latestKey, { time: Date.now(), data: latest }, { ttl: CACHE_STORE_SECONDS, tags: [`campus-${campusId}`] });
+      }
+    }
+    poolMonth = latest?.month || (campusId === session.campusId ? session.poolMonth : "") || "";
+    poolYear = latest?.year || (campusId === session.campusId ? session.poolYear : "") || "";
+  }
+
+  if (!poolMonth || !poolYear) {
+    return NextResponse.json({ error: "No pool info found for this campus" }, { status: 400 });
+  }
+
+  const cacheKey = `${campusId}-${poolMonth}-${poolYear}`;
+  const cached = (await cache.get(cacheKey)) as { time: number; data: unknown } | null;
+  if (cached && Date.now() - cached.time < CACHE_TTL) {
+    return NextResponse.json(paginate(cached.data as CachedPool, pageNum, minLevel, maxLevel));
   }
 
   try {
@@ -50,26 +137,22 @@ export async function GET() {
 
     while (hasMore) {
       const params = new URLSearchParams({
-        "filter[pool_month]": session.poolMonth,
-        "filter[pool_year]": session.poolYear,
-        "filter[primary_campus_id]": session.campusId.toString(),
+        "filter[pool_month]": poolMonth,
+        "filter[pool_year]": poolYear,
+        "filter[primary_campus_id]": campusId.toString(),
         "page[size]": perPage.toString(),
         "page[number]": page.toString(),
         "sort": "login",
       });
 
-      const response = await fetch(`${FORTYTWO_API_BASE}/users?${params}`, {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      });
+      const response = await ftFetch(`${FORTYTWO_API_BASE}/users?${params}`, session.accessToken);
 
       if (!response.ok) {
         if (response.status === 401) {
           return NextResponse.json({ error: "Token expired. Please sign in again." }, { status: 401 });
         }
         console.error("42 API error:", response.status, await response.text());
-        return NextResponse.json({ error: "Failed to fetch pool users" }, { status: 500 });
+        throw new Error("Failed to fetch pool users");
       }
 
       const users: FortyTwoUser[] = await response.json();
@@ -87,9 +170,7 @@ export async function GET() {
             "page[size]": "100",
             "page[number]": cuPage.toString(),
           });
-          const cuRes = await fetch(`${FORTYTWO_API_BASE}/cursus_users?${cuParams}`, {
-            headers: { Authorization: `Bearer ${session.accessToken}` },
-          });
+          const cuRes = await ftFetch(`${FORTYTWO_API_BASE}/cursus_users?${cuParams}`, session.accessToken);
 
           if (!cuRes.ok) {
             console.error("Cursus users fetch error:", cuRes.status);
@@ -132,24 +213,22 @@ export async function GET() {
       login: user.login,
       displayname: user.displayname,
       imageUrl: user.image?.link || null,
-      poolYear: session.poolYear,
-      poolMonth: session.poolMonth,
+      poolYear: poolYear,
+      poolMonth: poolMonth,
       level: user.level || 0,
-      campusId: session.campusId,
+      campusId: campusId,
       validatedPool: !!user.validatedPool,
     }));
 
     poolUsers.sort((a, b) => b.level - a.level);
 
-    return NextResponse.json({
-      poolMonth: session.poolMonth,
-      poolYear: session.poolYear,
-      total: poolUsers.length,
-      users: poolUsers,
-      hasMore: false,
-    });
+    const fullPool: CachedPool = { poolMonth, poolYear, users: poolUsers };
+    await cache.set(cacheKey, { time: Date.now(), data: fullPool }, { ttl: CACHE_STORE_SECONDS, tags: [`campus-${campusId}`] });
+    return NextResponse.json(paginate(fullPool, pageNum, minLevel, maxLevel));
   } catch (err) {
     console.error("Pool users fetch error:", err);
+    // Serve the last successful result (even stale) rather than an error
+    if (cached) return NextResponse.json(paginate(cached.data as CachedPool, pageNum, minLevel, maxLevel));
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
