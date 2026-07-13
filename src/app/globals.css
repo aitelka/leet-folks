@@ -3,6 +3,7 @@
 @import "tailwindcss";
 
 :root {
+  --chamfer-cut: 9%;
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
   --text-primary: #ffffff;
@@ -31,14 +32,6 @@
   --font-display: 'Racing Sans One', sans-serif;
 }
 
-
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
 html {
   scroll-behavior: smooth;
@@ -154,7 +147,6 @@ h1, h2, h3, h4, h5, h6,
   background: rgba(6, 12, 24, 0.7);
   @apply backdrop-blur-md;
   border-bottom: 1px solid var(--glass-border);
-  animation: slideDown 0.8s ease-out;
 }
 
 @keyframes slideDown {
@@ -1164,10 +1156,37 @@ h1, h2, h3, h4, h5, h6,
   gap: 1rem;
   justify-content: center;
   margin-bottom: 2rem;
-  animation: fadeInUp 0.6s ease-out 0.25s both;
 }
 
-.poolFilterSelect {
+/* Custom filter dropdown (replaces native <select> to match app chrome) */
+.filterDropdown {
+  position: relative;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.filterDropdown--fit,
+.filterDropdown--narrow {
+  width: fit-content;
+}
+
+.filterDropdown--fit .filterDropdownTrigger,
+.filterDropdown--narrow .filterDropdownTrigger {
+  width: auto;
+  padding: 0.6rem 0.75rem;
+}
+
+.filterDropdown--fit .filterDropdownValue,
+.filterDropdown--narrow .filterDropdownValue {
+  max-width: none;
+}
+
+.filterDropdownTrigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.6rem 1rem;
   border-radius: 0;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
@@ -1180,21 +1199,78 @@ h1, h2, h3, h4, h5, h6,
   -webkit-backdrop-filter: blur(20px);
   transition: border-color 0.3s ease;
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23b0b3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem top 50%;
-  background-size: 0.65rem auto;
-  padding-right: 2.2rem;
 }
 
-.poolFilterSelect:focus, .poolFilterSelect:hover {
+.filterDropdownTrigger:hover,
+.filterDropdownTrigger:focus-visible,
+.filterDropdown:has(.filterDropdownIconOpen) .filterDropdownTrigger {
   border-color: rgba(0, 186, 188, 0.4);
 }
 
-.poolFilterSelect option {
-  background: var(--bg-primary);
+.filterDropdownValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterDropdownIcon {
+  flex-shrink: 0;
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.filterDropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.filterDropdownMenu {
+  position: fixed;
+  z-index: 200;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-secondary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  padding: 0.35rem;
+}
+
+.filterDropdownMenu::-webkit-scrollbar {
+  display: none;
+}
+
+.filterDropdownGroupLabel {
+  padding: 0.4rem 0.6rem 0.2rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.filterDropdownOption {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.filterDropdownOption:hover {
+  background: var(--glass-bg);
+  color: var(--accent);
+}
+
+.filterDropdownOptionSelected {
+  color: var(--accent);
 }
 
 /* Pool Grid */
@@ -1390,82 +1466,6 @@ h1, h2, h3, h4, h5, h6,
   letter-spacing: 0.02em;
 }
 
-/* Pool Loading Shimmer */
-.poolLoadingContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem 0;
-  width: 100%;
-}
-
-.poolLoadingText {
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-bottom: 1rem;
-}
-
-.shimmerCard {
-  border-color: transparent !important;
-  pointer-events: none;
-}
-
-.shimmerCard .poolCardImageContainer {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.shimmerText {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.shimmerName {
-  width: 120px;
-  height: 16px;
-  margin-bottom: 4px;
-}
-
-.shimmerLogin {
-  width: 80px;
-  height: 12px;
-}
-
-.shimmerBadge {
-  width: 60px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
-}
-
-.shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    transparent 100%
-  );
-  transform: translateX(-100%);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
 /* Pool Error */
 .poolError {
   display: flex;
@@ -1557,6 +1557,25 @@ h1, h2, h3, h4, h5, h6,
   .poolCardLogin {
     font-size: 0.75rem;
   }
+
+  .poolFilters {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.25rem;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .poolFilters::-webkit-scrollbar {
+    display: none;
+  }
+
 }
 
 @media (max-width: 480px) {
@@ -1628,13 +1647,8 @@ h1, h2, h3, h4, h5, h6,
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
   border-radius: 0;
-  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
   padding: 1.5rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   transition: transform 0.3s ease, opacity 0.3s ease;
   position: relative;
   contain: layout;
@@ -1644,21 +1658,53 @@ h1, h2, h3, h4, h5, h6,
   transform: translateY(-10px);
 }
 
+/* Fill lives on its own clipped layer so it follows the same chamfered
+   corners as the .chamferFrame bracket instead of showing a square card
+   corner behind the diagonal stroke. */
+.podiumPlace::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  clip-path: polygon(var(--chamfer-cut) 0, 100% 0, 100% calc(100% - var(--chamfer-cut)), calc(100% - var(--chamfer-cut)) 100%, 0 100%, 0 var(--chamfer-cut));
+  z-index: -1;
+}
+
+.chamferFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chamferFrame path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.88);
+  stroke-width: 1.5;
+}
+
 .firstPlace {
-  border-color: rgba(255, 215, 0, 0.5); /* Gold */
-  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
   padding-bottom: 3rem;
   z-index: 3;
 }
 
+/* Gold ambient glow lives on the clipped fill layer too, so it follows the
+   chamfered corners instead of bleeding out as a plain rectangle behind the
+   bracket. */
+.firstPlace::before {
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+}
+
 .secondPlace {
-  border-color: rgba(192, 192, 192, 0.5); /* Silver */
   padding-bottom: 2rem;
   z-index: 2;
 }
 
 .thirdPlace {
-  border-color: rgba(205, 127, 50, 0.5); /* Bronze */
   padding-bottom: 1rem;
   z-index: 1;
 }
@@ -1873,6 +1919,44 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: 0 0 20px rgba(0, 186, 188, 0.4);
 }
 
+/* ========== SKELETON SHIMMER ========== */
+/* Applied on top of the real card classes (podiumAvatar, leaderboardRank, etc.)
+   so placeholder sizes/margins are always identical to the live cards. */
+@keyframes skeletonShimmer {
+  0% { background-position: -450px 0; }
+  100% { background-position: 450px 0; }
+}
+
+.skeletonBlock {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.15) 37%,
+    rgba(255, 255, 255, 0.05) 63%
+  );
+  background-size: 900px 100%;
+  animation: skeletonShimmer 1.5s linear infinite;
+}
+
+.podiumName.skeletonBlock,
+.podiumLogin.skeletonBlock,
+.podiumLevel.skeletonBlock,
+.leaderboardItemName.skeletonBlock,
+.leaderboardItemLogin.skeletonBlock,
+.leaderboardItemLevel.skeletonBlock,
+.leaderboardRank .skeletonBlock {
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.leaderboardItem.skeletonItem {
+  animation: none;
+}
+
+.podiumPlace.skeletonCard:hover {
+  transform: none;
+}
+
 .loadMoreBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1917,7 +2001,6 @@ h1, h2, h3, h4, h5, h6,
     flex: 1;
     min-width: 0;
     padding: 1rem 0.7rem;
-    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   }
 
   .firstPlace {
@@ -2027,7 +2110,6 @@ h1, h2, h3, h4, h5, h6,
 
   .podiumPlace {
     padding: 0.75rem 0.6rem;
-    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   }
 
   .firstPlace .podiumAvatar {
@@ -2183,7 +2265,6 @@ h1, h2, h3, h4, h5, h6,
   background: transparent;
   padding: 2rem;
   border: none;
-  --modal-cut-size: 24px;
   opacity: 0;
   transform: scale(0.4) translateY(40px);
   filter: blur(8px);
@@ -2196,9 +2277,6 @@ h1, h2, h3, h4, h5, h6,
 
 .userModalContent.visible {
   animation: morphZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  background: rgba(6, 12, 24, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 186, 188, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
@@ -2226,34 +2304,29 @@ h1, h2, h3, h4, h5, h6,
   filter: none;
 }
 
-/* Simulated Glowing Border and Background with Cut Edges */
+/* Simulated Glowing Background (border is drawn by the .chamferFrame SVG overlay).
+   Clipped to the same chamfered corners as the bracket so the fill doesn't
+   show a square card corner behind the diagonal stroke. */
 .userModalContent::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(135deg, rgba(7, 12, 24, 0.96), var(--bg-secondary));
-  border: 1px solid var(--accent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 0;
-  clip-path: polygon(var(--modal-cut-size) 0, 100% 0, 100% calc(100% - var(--modal-cut-size)), calc(100% - var(--modal-cut-size)) 100%, 0 100%, 0 var(--modal-cut-size));
+  clip-path: polygon(var(--chamfer-cut) 0, 100% 0, 100% calc(100% - var(--chamfer-cut)), calc(100% - var(--chamfer-cut)) 100%, 0 100%, 0 var(--chamfer-cut));
   z-index: -1;
-  box-shadow: 
-    0 0 30px rgba(0, 186, 188, 0.15), 
+  box-shadow:
+    0 0 30px rgba(0, 186, 188, 0.15),
     0 20px 60px rgba(0, 0, 0, 0.5),
     inset 0 0 10px rgba(0, 186, 188, 0.05),
     0 0 15px var(--accent);
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
-  .userModalContent {
-    --modal-cut-size: 16px;
-  }
-}
-
-@media (max-width: 400px) {
-  .userModalContent {
-    --modal-cut-size: 12px;
-  }
+.userModalContent .chamferFrame path {
+  stroke: var(--accent);
 }
 
 .userModalCloseBtn {
@@ -2442,6 +2515,11 @@ h1, h2, h3, h4, h5, h6,
   100% { opacity: 0; }
 }
 
+/* ========== SIDEBAR TOGGLE BUTTON ========== */
+.app-sidebar-toggle {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
 /* ========== JUMP TO TOP BUTTON ========== */
 .jumpToTopBtn {
   position: fixed;
@@ -2449,7 +2527,7 @@ h1, h2, h3, h4, h5, h6,
   right: 2rem;
   width: 50px;
   height: 50px;
-  border-radius: 50%;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   background: var(--glass-bg);
   border: 1px solid var(--accent);
   color: var(--accent);
@@ -2479,6 +2557,27 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bg-primary);
   box-shadow: 0 0 20px rgba(0, 186, 188, 0.5);
   transform: translateY(-5px);
+}
+
+@media (max-width: 768px) {
+  .jumpToTopBtn {
+    left: 50%;
+    right: auto;
+    bottom: 1rem;
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+    transform: translate(-50%, 20px);
+  }
+
+  .jumpToTopBtn.visible {
+    transform: translate(-50%, 0);
+  }
+
+  .jumpToTopBtn:hover {
+    transform: translate(-50%, -5px);
+  }
 }
 
 /* ==========================================================================

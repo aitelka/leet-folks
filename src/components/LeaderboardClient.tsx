@@ -1,9 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { use, useEffect, useState, useRef, useCallback } from "react";
 import { flushSync } from "react-dom";
+import { NavArrowUp, WarningTriangle } from "iconoir-react";
 import UserProfileModal, { ModalUser } from "./UserProfileModal";
+import FilterDropdown from "./FilterDropdown";
+import ChamferFrame from "./ChamferFrame";
+import LeaderboardSkeleton from "./LeaderboardSkeleton";
 
 interface LeaderboardUser {
   id: number;
@@ -14,18 +18,33 @@ interface LeaderboardUser {
   poolYear: string;
 }
 
-export default function LeaderboardClient({ dataSource = "leaderboard" }: { dataSource?: "leaderboard" | "pool" }) {
-  const [users, setUsers] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
+export type InitialLoadResult =
+  | { ok: true; users: LeaderboardUser[]; hasMore: boolean; poolMonth?: string; poolYear?: string }
+  | { ok: false; error: string };
+
+export default function LeaderboardClient({
+  dataSource = "leaderboard",
+  initialData,
+}: {
+  dataSource?: "leaderboard" | "pool";
+  initialData: Promise<InitialLoadResult>;
+}) {
+  // Resolves during the server-streamed Suspense boundary set up by the page,
+  // so page 1 arrives with the initial HTML instead of after a client mount + fetch.
+  const initial = use(initialData);
+
+  const [users, setUsers] = useState<LeaderboardUser[]>(initial.ok ? initial.users : []);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initial.ok ? null : initial.error);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(initial.ok ? initial.hasMore : false);
   const [promoYear, setPromoYear] = useState<string>("all");
-  const [selectedPoolMonth, setSelectedPoolMonth] = useState<string>("");
-  const [selectedPoolYear, setSelectedPoolYear] = useState<string>("");
+  const [selectedPoolMonth, setSelectedPoolMonth] = useState<string>(initial.ok ? initial.poolMonth || "" : "");
+  const [selectedPoolYear, setSelectedPoolYear] = useState<string>(initial.ok ? initial.poolYear || "" : "");
   const [selectedCampusId, setSelectedCampusId] = useState<string>("");
   const [campuses, setCampuses] = useState<{ id: number; name: string; city: string; country: string }[]>([]);
+  const [promoYears, setPromoYears] = useState<string[]>([]);
   const [myCountry, setMyCountry] = useState<string>("");
   const [clanColors, setClanColors] = useState<Record<number, string>>({});
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
@@ -36,6 +55,7 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   const [showScrollTop, setShowScrollTop] = useState(false);
   const activeCardRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreRef = useRef(false);
 
   const filteredUsers = promoYear === "all" ? users : users.filter(u => u.poolYear === promoYear);
   const top3 = filteredUsers.slice(0, 3);
@@ -166,7 +186,11 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           setSelectedPoolYear(data.poolYear);
         }
       } else {
-        setUsers((prev) => [...prev, ...data.users]);
+        setUsers((prev) => {
+          const existingIds = new Set(prev.map((u) => u.id));
+          const newUsers = data.users.filter((u: LeaderboardUser) => !existingIds.has(u.id));
+          return [...prev, ...newUsers];
+        });
       }
       setHasMore(data.hasMore);
     } catch (err) {
@@ -174,12 +198,11 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      loadingMoreRef.current = false;
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchLeaderboard(1);
     if (dataSource === "pool") {
       fetch("/api/campuses")
         .then((res) => res.json())
@@ -189,6 +212,13 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           setMyCountry(list.find((c: { id: number }) => c.id === data.myCampusId)?.country || "");
         })
         .catch((err) => console.error("Campuses fetch err", err));
+    }
+
+    if (dataSource === "leaderboard") {
+      fetch("/api/promo-years")
+        .then((res) => res.json())
+        .then((data) => setPromoYears(data.years || []))
+        .catch((err) => console.error("Promo years fetch err", err));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -203,12 +233,12 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   };
 
   const loadMore = () => {
-    if (!loadingMore && hasMore) {
-      setLoadingMore(true);
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchLeaderboard(nextPage);
-    }
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchLeaderboard(nextPage);
   };
 
   useEffect(() => {
@@ -225,152 +255,99 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loading, loadingMore, page]);
 
+  const promoYearOptions = [
+    { value: "all", label: "All Promo Years" },
+    ...promoYears.map((year) => ({ value: year, label: year })),
+  ];
+
+  const monthOptions = [
+    { value: "january", label: "January" },
+    { value: "february", label: "February" },
+    { value: "march", label: "March" },
+    { value: "april", label: "April" },
+    { value: "may", label: "May" },
+    { value: "june", label: "June" },
+    { value: "july", label: "July" },
+    { value: "august", label: "August" },
+    { value: "september", label: "September" },
+    { value: "october", label: "October" },
+    { value: "november", label: "November" },
+    { value: "december", label: "December" },
+  ];
+
+  const yearOptions = Array.from({ length: new Date().getFullYear() - 2012 }, (_, i) => 2013 + i)
+    .reverse()
+    .map((year) => ({ value: year.toString(), label: year.toString() }));
+
+  const campusGroups = countryOrder.map((country) => ({
+    label: country,
+    options: campusesByCountry[country].map((c) => ({ value: c.id.toString(), label: c.city })),
+  }));
+
   const filtersUi = (
     <>
       {dataSource === "leaderboard" && (
-        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center" }}>
-          <select
-            className="poolFilterSelect"
+        <div className="poolFilters">
+          <FilterDropdown
             value={promoYear}
-            onChange={(e) => {
-              setPromoYear(e.target.value);
+            onChange={(v) => {
+              setPromoYear(v);
               setPage(1);
             }}
-          >
-            <option value="all">All Promo Years</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="2019">2019</option>
-            <option value="2018">2018</option>
-          </select>
+            options={promoYearOptions}
+          />
         </div>
       )}
 
       {dataSource === "pool" && (
-        <div className="poolFilters" style={{ marginBottom: "2rem", justifyContent: "center", display: "flex", gap: "1rem" }}>
-          <select
-            className="poolFilterSelect"
+        <div className="poolFilters">
+          <FilterDropdown
             value={selectedCampusId}
-            onChange={(e) => handleCampusChange(e.target.value)}
-          >
-            <option value="">My Campus</option>
-            {countryOrder.map((country) => (
-              <optgroup key={country} label={country}>
-                {campusesByCountry[country].map((c) => (
-                  <option key={c.id} value={c.id.toString()}>{c.city}</option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <select
-            className="poolFilterSelect"
+            onChange={handleCampusChange}
+            placeholder="My Campus"
+            groups={campusGroups}
+            className="filterDropdown--fit"
+          />
+          <FilterDropdown
             value={selectedPoolMonth}
-            onChange={(e) => {
-              const newMonth = e.target.value;
+            onChange={(newMonth) => {
               setSelectedPoolMonth(newMonth);
               setPage(1);
               setLoading(true);
               fetchLeaderboard(1, newMonth, selectedPoolYear, selectedCampusId);
             }}
-          >
-            <option value="january">January</option>
-            <option value="february">February</option>
-            <option value="march">March</option>
-            <option value="april">April</option>
-            <option value="may">May</option>
-            <option value="june">June</option>
-            <option value="july">July</option>
-            <option value="august">August</option>
-            <option value="september">September</option>
-            <option value="october">October</option>
-            <option value="november">November</option>
-            <option value="december">December</option>
-          </select>
-          <select
-            className="poolFilterSelect"
+            options={monthOptions}
+            className="filterDropdown--fit"
+          />
+          <FilterDropdown
             value={selectedPoolYear}
-            onChange={(e) => {
-              const newYear = e.target.value;
+            onChange={(newYear) => {
               setSelectedPoolYear(newYear);
               setPage(1);
               setLoading(true);
               fetchLeaderboard(1, selectedPoolMonth, newYear, selectedCampusId);
             }}
-          >
-            {Array.from({ length: new Date().getFullYear() - 2012 }, (_, i) => 2013 + i).reverse().map(year => (
-              <option key={year} value={year.toString()}>{year}</option>
-            ))}
-          </select>
+            options={yearOptions}
+            className="filterDropdown--narrow"
+          />
         </div>
       )}
     </>
   );
 
   if (loading) {
-    const shimmerItems = Array.from({ length: 15 }, (_, i) => i);
     return (
-      <div className="leaderboardContainer" id="leaderboardContainer">
-        {/* Filters */}
+      <>
         {filtersUi}
-
-        {/* Shimmer Podium */}
-        <div className="podiumContainer">
-          {/* 2nd Place Shimmer */}
-          <div className="podiumPlace secondPlace shimmerCard">
-            <div className="podiumAvatarContainer">
-              <div className="podiumAvatar shimmer" style={{ width: 100, height: 100, border: "none" }}></div>
-            </div>
-            <div className="shimmerText shimmerName shimmer" style={{ width: "80px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerText shimmerLogin shimmer" style={{ width: "60px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerBadge shimmer" style={{ width: "50px", height: "24px" }}></div>
-          </div>
-          
-          {/* 1st Place Shimmer */}
-          <div className="podiumPlace firstPlace shimmerCard">
-            <div className="podiumAvatarContainer">
-              <div className="podiumAvatar shimmer" style={{ width: 130, height: 130, border: "none" }}></div>
-            </div>
-            <div className="shimmerText shimmerName shimmer" style={{ width: "100px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerText shimmerLogin shimmer" style={{ width: "70px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerBadge shimmer" style={{ width: "60px", height: "28px" }}></div>
-          </div>
-
-          {/* 3rd Place Shimmer */}
-          <div className="podiumPlace thirdPlace shimmerCard">
-            <div className="podiumAvatarContainer">
-              <div className="podiumAvatar shimmer" style={{ width: 90, height: 90, border: "none" }}></div>
-            </div>
-            <div className="shimmerText shimmerName shimmer" style={{ width: "70px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerText shimmerLogin shimmer" style={{ width: "50px", marginBottom: "0.5rem" }}></div>
-            <div className="shimmerBadge shimmer" style={{ width: "40px", height: "20px" }}></div>
-          </div>
-        </div>
-
-        {/* Shimmer List */}
-        <div className="leaderboardList">
-          {shimmerItems.map((i) => (
-            <div className="leaderboardItem shimmerCard" key={i} style={{ animationDelay: `${Math.min(i * 0.05, 1)}s` }}>
-              <div className="leaderboardRank shimmer" style={{ width: "30px", height: "24px", color: "transparent", background: "rgba(255, 255, 255, 0.1)", borderRadius: "4px" }}></div>
-              <div className="leaderboardAvatar shimmer" style={{ width: 72, height: 72, border: "none" }}></div>
-              <div className="leaderboardItemInfo">
-                <div className="shimmerText shimmerName shimmer" style={{ width: "120px", marginBottom: "0.5rem" }}></div>
-                <div className="shimmerText shimmerLogin shimmer" style={{ width: "80px" }}></div>
-              </div>
-              <div className="shimmerBadge shimmer" style={{ width: "60px", height: "24px", marginLeft: "auto" }}></div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <LeaderboardSkeleton />
+      </>
     );
   }
 
   if (error) {
     return (
       <div className="poolError">
-        <span className="poolErrorIcon">⚠</span>
+        <span className="poolErrorIcon"><WarningTriangle /></span>
         <p>{error}</p>
         <button 
           onClick={() => {
@@ -401,15 +378,16 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
         <div className="podiumContainer">
           {/* 2nd Place */}
           {top3[1] && (
-            <div 
+            <div
               className={`podiumPlace secondPlace ${activeCardId === top3[1].id ? 'cardActive' : ''}`}
-              onClick={(e) => handleUserClick(top3[1], e.currentTarget)} 
+              onClick={(e) => handleUserClick(top3[1], e.currentTarget)}
               style={{
                 cursor: "pointer",
                 ...(clanColors[top3[1].id] ? { '--clan-color': clanColors[top3[1].id] } : {})
               } as React.CSSProperties}
             >
-              <div 
+              <ChamferFrame />
+              <div
                 className="podiumAvatarContainer"
                 style={{ viewTransitionName: transitioningCardId === top3[1].id ? `card-${top3[1].id}` : "none" }}
               >
@@ -444,15 +422,16 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
           
           {/* 1st Place */}
           {top3[0] && (
-            <div 
+            <div
               className={`podiumPlace firstPlace ${activeCardId === top3[0].id ? 'cardActive' : ''}`}
-              onClick={(e) => handleUserClick(top3[0], e.currentTarget)} 
+              onClick={(e) => handleUserClick(top3[0], e.currentTarget)}
               style={{
                 cursor: "pointer",
                 ...(clanColors[top3[0].id] ? { '--clan-color': clanColors[top3[0].id] } : {})
               } as React.CSSProperties}
             >
-              <div 
+              <ChamferFrame />
+              <div
                 className="podiumAvatarContainer"
                 style={{ viewTransitionName: transitioningCardId === top3[0].id ? `card-${top3[0].id}` : "none" }}
               >
@@ -487,15 +466,16 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
 
           {/* 3rd Place */}
           {top3[2] && (
-            <div 
+            <div
               className={`podiumPlace thirdPlace ${activeCardId === top3[2].id ? 'cardActive' : ''}`}
-              onClick={(e) => handleUserClick(top3[2], e.currentTarget)} 
+              onClick={(e) => handleUserClick(top3[2], e.currentTarget)}
               style={{
                 cursor: "pointer",
                 ...(clanColors[top3[2].id] ? { '--clan-color': clanColors[top3[2].id] } : {})
               } as React.CSSProperties}
             >
-              <div 
+              <ChamferFrame />
+              <div
                 className="podiumAvatarContainer"
                 style={{ viewTransitionName: transitioningCardId === top3[2].id ? `card-${top3[2].id}` : "none" }}
               >
@@ -533,9 +513,9 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
       {/* Remaining Users List */}
       <div className="leaderboardList">
         {remaining.map((user, index) => (
-          <div 
+          <div
             className={`leaderboardItem ${activeCardId === user.id ? 'cardActive' : ''}`}
-            key={user.id} 
+            key={user.id}
             style={{
               animationDelay: `${Math.min(index * 0.05, 1)}s`,
               cursor: "pointer"
@@ -617,7 +597,7 @@ export default function LeaderboardClient({ dataSource = "leaderboard" }: { data
         onClick={scrollToTop}
         title="Jump to Top"
       >
-        ↑
+        <NavArrowUp />
       </div>
     </div>
   );

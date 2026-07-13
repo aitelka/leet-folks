@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import ChamferFrame from "./ChamferFrame";
 
 export interface ModalUser {
   id: number;
@@ -60,15 +62,16 @@ export default function UserProfileModal({ isOpen, onClose, user, useViewTransit
   const overlayClass = `userModalOverlay ${useViewTransition ? 'vt-modal' : (isVisible ? 'visible' : '')}`;
   const contentClass = `userModalContent ${useViewTransition ? 'vt-modal' : (isVisible ? 'visible' : '')}`;
 
-  return (
+  const modalContent = (
     <div className={overlayClass} onClick={onClose} style={{ viewTransitionName: 'modal-overlay' }}>
       <div 
         className={contentClass} 
         onClick={(e) => e.stopPropagation()}
         style={{ viewTransitionName: `card-${user.id}` }}
       >
+        <ChamferFrame />
         <button className="userModalCloseBtn" onClick={onClose}>×</button>
-        
+
         <div className="userModalHeader">
           <div className="userModalAvatarWrapper">
             <Image
@@ -123,4 +126,10 @@ export default function UserProfileModal({ isOpen, onClose, user, useViewTransit
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  
+  return null;
 }
